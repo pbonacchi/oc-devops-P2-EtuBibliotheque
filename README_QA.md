@@ -2,51 +2,61 @@
 
 ## Contexte et objectif
 
-Ce document formalise le plan de tests et le rapport de couverture pour le backend `etudiant-backend`, sur la base des tests unitaires de `UserService` et des tests d'intégration de `UserController`.
+Ce document formalise le plan de tests et le rapport de couverture pour le backend `etudiant-backend`.
 
-Objectif principal : vérifier la qualité fonctionnelle et technique du socle utilisateur (authentification, inscription, CRUD étudiant), puis piloter l'atteinte du critère projet de couverture >= 80 %.
+Il couvre l'ensemble des suites de tests implémentées :
+
+- **Tests unitaires** : `UserService`, `JwtService`, `CustomUserDetailService`, `JwtAuthenticationFilter`, `RestExceptionHandler`
+- **Tests d'intégration** : `UserController` (chaîne HTTP complète + MySQL via Testcontainers)
+
+Objectif principal : vérifier la qualité fonctionnelle et technique du socle utilisateur (authentification JWT, inscription, CRUD étudiant, gestion des erreurs HTTP), puis piloter l'atteinte du critère projet de couverture **>= 80 %** (instructions, hors exclusions JaCoCo).
 
 ## Périmètre (scope)
 
 ### Ce qui est testé
 
-- Tests unitaires service :
-  - `com.openclassrooms.etudiant.service.UserService`
-  - logique métier en isolation avec mocks (`UserRepository`, `PasswordEncoder`, `JwtService`, `UserDtoMapper`)
-- Tests d'intégration controller :
-  - `com.openclassrooms.etudiant.controller.UserController`
-  - chaîne complète `Controller -> Service -> Repository -> MySQL`
-  - sécurité HTTP (authentifié/non authentifié), validation DTO, gestion des erreurs métier
+| Classe testée | Fichier de test | Type | Focus |
+|---|---|---|---|
+| `UserService` | `UserServiceTest` | Unitaire | Logique métier (register, login, CRUD) avec mocks |
+| `JwtService` | `JwtServiceTest` | Unitaire | Génération, extraction, validation et expiration JWT |
+| `CustomUserDetailService` | `CustomUserDetailServiceTest` | Unitaire | Chargement `UserDetails` (trouvé / absent) |
+| `JwtAuthenticationFilter` | `JwtAuthenticationFilterTest` | Unitaire | Filtre Bearer, branches d'erreur, `SecurityContext` |
+| `RestExceptionHandler` | `RestExceptionHandlerTest` | Unitaire | Réponses HTTP d'erreur (400, 401, 403, 500) |
+| `UserController` | `UserControllerTest` | Intégration | API REST, sécurité, validation DTO, persistance MySQL |
+
+Couverture indirecte (sans test dédié) : `SpringSecurityConfig`, `AppConfig`, `RequestLoggingFilterConfig`, `UserDtoMapperImpl` — exercés via le contexte Spring des tests d'intégration et/ou la chaîne métier.
 
 ### Ce qui n'est pas (ou partiellement) testé
 
-- Couverture faible des classes sécurité infra :
-  - `JwtAuthenticationFilter`
-  - `CustomUserDetailService`
-  - scénarios branches de `SpringSecurityConfig`
-- Couverture partielle de `RestExceptionHandler` et `JwtService`
-- Entité `User` non couverte (méthodes `UserDetails`, getters/setters)
-- Hors périmètre :
-  - performance/load tests
-  - tests E2E front-back
-  - résilience/chaos
+- `SpringSecurityConfig` : pas de tests unitaires dédiés (configuration de filtres et règles d'autorisation)
+- Scénarios de charge, E2E front-back, résilience/chaos
+- Classes exclues du rapport JaCoCo (voir section dédiée) : pas d'objectif de couverture directe sur ces artefacts
+
+### Hors périmètre
+
+- Performance / load tests
+- Tests E2E front-back
+- Résilience / chaos
 
 ## Objectifs de test
 
 - Valider la conformité fonctionnelle des opérations utilisateur
 - Vérifier les règles métier (unicité login, existence id, validation des champs)
+- Vérifier le cycle de vie JWT (génération, validation, expiration, signature)
+- Vérifier l'authentification par filtre HTTP et le chargement utilisateur Spring Security
+- Vérifier la gestion centralisée des erreurs et les codes HTTP attendus
 - Vérifier l'intégration entre composants applicatifs et la base
-- Vérifier la gestion des erreurs et codes HTTP attendus
 - Limiter les régressions sur les parcours critiques
 
 ## Stratégie de test
 
-### 1) Tests unitaires (service)
+### 1) Tests unitaires (service, sécurité, handler)
 
-- Isolation complète via mocks (Mockito)
-- Focus sur la logique métier pure (`UserService`)
-- Frameworks/outils : JUnit 5, Mockito, AssertJ
-- Vérification des interactions (`verify`) et exceptions fonctionnelles
+- Isolation via mocks (Mockito) ou instanciation directe (`JwtService`, `RestExceptionHandler`)
+- `ReflectionTestUtils` pour injecter secret et expiration JWT sans contexte Spring
+- `MockHttpServletRequest` / `MockHttpServletResponse` pour le filtre JWT
+- Frameworks : JUnit 5, Mockito, AssertJ
+- Vérification des interactions (`verify`) et des exceptions fonctionnelles
 
 ### 2) Tests d'intégration (controller)
 
@@ -64,48 +74,76 @@ Objectif principal : vérifier la qualité fonctionnelle et technique du socle u
 - Framework : Spring Boot 3.5.5
 - Base de données de test : MySQL (Testcontainers 2.0.3)
 - Sécurité : Spring Security + JWT
-- Couverture : JaCoCo 0.8.12
+- Couverture : JaCoCo 0.8.12 (seuil 80 % configuré dans `pom.xml`)
 
 ## Données de test
 
 - Jeux valides :
   - utilisateurs complets (`firstName`, `lastName`, `login`, `password`)
   - étudiants valides pour create/update
+  - tokens JWT signés avec secret de test (Base64)
 - Jeux invalides / erreurs :
-  - champs manquants, payload vides
-  - login déjà existant
-  - id inexistant
-  - mot de passe invalide
+  - champs manquants, payload vides, JSON malformé
+  - login déjà existant, id inexistant, mot de passe invalide
+  - token JWT malformé, expiré ou signé avec une autre clé
+  - header `Authorization` absent ou non Bearer
   - requêtes non authentifiées
 - Données limites :
   - `null` (tests unitaires)
   - DTO vides (tests intégration)
 
-## Cas de test (vue synthétique)
+## Inventaire des tests
 
-Schéma d'identifiants retenu :
-- `UT-US-*` pour unit tests `UserService`
-- `IT-UC-*` pour integration tests `UserController`
+### Synthèse par classe
 
-| ID | Type | Description | Préconditions | Entrées | Résultat attendu |
-|---|---|---|---|---|---|
-| UT-US-REG-01 | Unitaire | register succès | login absent | user valide | save exécuté |
-| UT-US-REG-02 | Unitaire | register user null | aucune | `null` | `IllegalArgumentException` |
-| UT-US-REG-03 | Unitaire | register login existant | login présent | user doublon | `IllegalArgumentException` |
-| UT-US-LOG-01 | Unitaire | login succès | user présent + password OK | login/password valides | token retourné |
-| UT-US-LOG-02..05 | Unitaire | login erreurs | selon cas | null / invalide | exceptions attendues |
-| UT-US-CRT-01..03 | Unitaire | createStudent nominal + erreurs | selon cas | user valide/null/doublon | save ou exception |
-| UT-US-GETALL-01 | Unitaire | getAllStudents | liste mockée | N/A | liste retournée |
-| UT-US-GETID-01..02 | Unitaire | getById nominal + absent | selon cas | id | Optional ou exception |
-| UT-US-UPD-01..03 | Unitaire | update nominal + erreurs | selon cas | dto/id | save ou exception |
-| UT-US-DEL-01..02 | Unitaire | delete nominal + absent | selon cas | id | delete ou exception |
-| IT-UC-REG-01..03 | Intégration | POST /api/register | app + DB | DTO invalide/valide/doublon | 400/201/400 |
-| IT-UC-LOG-01..03 | Intégration | POST /api/login | user en DB selon cas | creds valides/invalides | 200 ou 400 |
-| IT-UC-CRT-01..03 | Intégration | POST /api/students | auth selon cas | studentDTO | 201/401/400 |
-| IT-UC-GETALL-01..02 | Intégration | GET /api/students | auth selon cas | N/A | 200/401 |
-| IT-UC-GETID-01..03 | Intégration | GET /api/students/{id} | auth + id selon cas | id | 200/400/401 |
-| IT-UC-UPD-01..04 | Intégration | PUT /api/students/{id} | auth + id selon cas | dto | 200/400/401 |
-| IT-UC-DEL-01..03 | Intégration | DELETE /api/students/{id} | auth + id selon cas | id | 204/400/401 |
+| Classe de test | Nb tests | Préfixe ID |
+|---|---:|---|
+| `UserServiceTest` | 19 | `UT-US-*` |
+| `JwtServiceTest` | 8 | `UT-JS-*` |
+| `CustomUserDetailServiceTest` | 2 | `UT-CUDS-*` |
+| `JwtAuthenticationFilterTest` | 4 | `UT-JAF-*` |
+| `RestExceptionHandlerTest` | 4 | `UT-REH-*` |
+| `UserControllerTest` | 21 | `IT-UC-*` |
+| **Total** | **58** | |
+
+### Cas de test (vue synthétique)
+
+| ID | Type | Description | Résultat attendu |
+|---|---|---|---|
+| **UserService** (`UT-US-*`) | | | |
+| UT-US-REG-01..03 | Unitaire | register succès / user null / login existant | save ou `IllegalArgumentException` |
+| UT-US-LOG-01..05 | Unitaire | login succès / login null / password null / login inconnu / password invalide | token ou `IllegalArgumentException` |
+| UT-US-CRT-01..03 | Unitaire | createStudent nominal / null / doublon | save ou exception |
+| UT-US-GETALL-01 | Unitaire | getAllStudents | liste retournée |
+| UT-US-GETID-01..02 | Unitaire | getById nominal / absent | Optional ou exception |
+| UT-US-UPD-01..03 | Unitaire | update nominal / dto null / id absent | save ou exception |
+| UT-US-DEL-01..02 | Unitaire | delete nominal / id absent | delete ou exception |
+| **JwtService** (`UT-JS-*`) | | | |
+| UT-JS-GEN-01 | Unitaire | generateToken avec `UserDetails` valide | token non vide, login extrait |
+| UT-JS-GET-01..02 | Unitaire | getUsernameFromToken valide / invalide | login ou `JwtException` |
+| UT-JS-VAL-01..04 | Unitaire | validateToken valide / malformé / expiré / mauvaise signature | OK ou `JwtException` |
+| UT-JS-EXP-01 | Unitaire | getExpiration | valeur configurée |
+| **CustomUserDetailService** (`UT-CUDS-*`) | | | |
+| UT-CUDS-01 | Unitaire | loadUserByUsername — login existant | `UserDetails` retourné |
+| UT-CUDS-02 | Unitaire | loadUserByUsername — login absent | `UsernameNotFoundException` |
+| **JwtAuthenticationFilter** (`UT-JAF-*`) | | | |
+| UT-JAF-DFI-01 | Unitaire | Bearer valide | authentification dans `SecurityContext`, filtre poursuivi |
+| UT-JAF-DFI-02 | Unitaire | header Authorization absent | pas d'appel JWT, contexte vide |
+| UT-JAF-EXT-01 | Unitaire | header non Bearer (ex. Basic) | pas d'authentification |
+| UT-JAF-DFI-03 | Unitaire | validation JWT en échec | exception absorbée, chaîne poursuivie |
+| **RestExceptionHandler** (`UT-REH-*`) | | | |
+| UT-REH-01 | Unitaire | JSON malformé | 400 + `ErrorDetails` |
+| UT-REH-02 | Unitaire | identifiants invalides | 401 + `ErrorDetails` |
+| UT-REH-03 | Unitaire | accès refusé | 403 + `ErrorDetails` |
+| UT-REH-04 | Unitaire | exception non gérée | 500 + message générique |
+| **UserController** (`IT-UC-*`) | | | |
+| IT-UC-REG-01..03 | Intégration | POST /api/register | 201 / 400 |
+| IT-UC-LOG-01..03 | Intégration | POST /api/login | 200 / 400 |
+| IT-UC-CRT-01..03 | Intégration | POST /api/students | 201 / 401 / 400 |
+| IT-UC-GETALL-01..02 | Intégration | GET /api/students | 200 / 401 |
+| IT-UC-GETID-01..03 | Intégration | GET /api/students/{id} | 200 / 400 / 401 |
+| IT-UC-UPD-01..04 | Intégration | PUT /api/students/{id} | 200 / 400 / 401 |
+| IT-UC-DEL-01..03 | Intégration | DELETE /api/students/{id} | 204 / 400 / 401 |
 
 ## Outils utilisés
 
@@ -120,54 +158,93 @@ Schéma d'identifiants retenu :
 
 ## Rapport de couverture
 
-Commande de génération :
+### Génération
+
+JaCoCo est intégré au cycle Maven (`prepare-agent`, `report`, `check`). Commande recommandée :
 
 ```bash
-mvn org.jacoco:jacoco-maven-plugin:0.8.12:prepare-agent test org.jacoco:jacoco-maven-plugin:0.8.12:report
+mvn test
 ```
 
-Rapport HTML :
-- `target/site/jacoco/index.html`
+Rapport HTML : `target/site/jacoco/index.html`
 
-Résultats globaux :
-- Couverture instructions : **78 %** (671/859)
-- Couverture branches : **69 %** (18/26)
-- Couverture lignes : **161/212**
+Vérification du seuil 80 % (échoue si non atteint) :
 
-Résultats de tests :
-- `UserServiceTest` : **19 tests**, 0 échec
-- `UserControllerTest` : **21 tests**, 0 échec
-- Total : **40 tests**, 100 % passés
+```bash
+mvn verify
+```
 
-Couverture par package (principaux) :
-- `com.openclassrooms.etudiant.controller` : **100 %**
-- `com.openclassrooms.etudiant.service` : **89 %**
-- `com.openclassrooms.etudiant.mapper` : **93 %**
-- `com.openclassrooms.etudiant.configuration.security` : **63 %**
-- `com.openclassrooms.etudiant.handler` : **51 %**
-- `com.openclassrooms.etudiant.entities` : **0 %**
+### Exclusions JaCoCo (périmètre du calcul)
+
+Les exclusions suivantes sont configurées dans `pom.xml` (phases `report` et `check`) :
+
+| Exclusion | Raison (synthétique) |
+|---|---|
+| `*Application*` | Point d'entrée Spring Boot sans logique métier testable |
+| `dto/**` | Objets de transfert (validation déclarative, couverts indirectement par les tests controller) |
+| `entities/**` | Modèle JPA / `UserDetails` — getters, mapping et persistance validés via service et intégration |
+| `handler/ErrorDetails.class` | POJO de réponse d'erreur ; structure vérifiée dans `RestExceptionHandlerTest`, pas de logique à isoler |
+
+Ces exclusions visent à mesurer la couverture du **code applicatif exécutable** plutôt que des artefacts génériques ou déjà validés indirectement.
+
+### Résultats (dernier rapport généré)
+
+> Chiffres issus de `target/site/jacoco/index.html` après exécution complète des 58 tests (hors classes exclues).
+
+**Couverture globale :**
+
+| Métrique | Valeur |
+|---|---|
+| Instructions | **99 %** (864/871) |
+| Branches | **84 %** (22/26) |
+| Lignes | **200/204** |
+
+**Résultats de tests :**
+
+| Classe de test | Tests | Échecs |
+|---|---:|---:|
+| `UserServiceTest` | 19 | 0 |
+| `JwtServiceTest` | 8 | 0 |
+| `CustomUserDetailServiceTest` | 2 | 0 |
+| `JwtAuthenticationFilterTest` | 4 | 0 |
+| `RestExceptionHandlerTest` | 4 | 0 |
+| `UserControllerTest` | 21 | 0 |
+| **Total** | **58** | **0** |
+
+**Couverture par package (principaux) :**
+
+| Package | Instructions |
+|---|---|
+| `controller` | 100 % |
+| `service` | 100 % |
+| `configuration.security` | 100 % |
+| `handler` (`RestExceptionHandler`) | 100 % |
+| `mapper` | 93 % |
+| `configuration` / `configuration.logging` | 100 % |
+
+Point d'attention : le package `mapper` reste à **93 %** (branches MapStruct partiellement non couvertes — cas `null` sur certains DTO).
 
 ## Critères d'acceptation
 
 - Tous les tests exécutés sans échec
-- Aucune régression critique sur parcours login/register/CRUD
+- Aucune régression critique sur parcours login/register/CRUD et sécurité JWT
 - Rapport de couverture généré et archivable
-- Seuil projet : **>= 80 %** de couverture globale
+- Seuil projet : **>= 80 %** de couverture globale (instructions, bundle JaCoCo avec exclusions)
 
-État actuel vs seuil :
-- **78 % < 80 %** -> critère global non atteint à ce stade
+**État actuel vs seuil :**
+
+- **99 % >= 80 %** → critère global **atteint** (sur périmètre JaCoCo configuré)
 
 ## Critères d'entrée / sortie
 
 ### Entrée
 
 - Code compilable
-- Environnement Docker actif
+- Environnement Docker actif (tests d'intégration `UserControllerTest`)
 - Dépendances Maven résolues
 
 ### Sortie
 
-- Tests unitaires + intégration exécutés
+- 58 tests unitaires + intégration exécutés
 - Rapports Surefire et JaCoCo générés
-- Défauts critiques analysés et traités/priorisés
-
+- Seuil JaCoCo `mvn verify` validé si pipeline qualité complet

@@ -60,11 +60,11 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
                 )
 <span class="fc" id="L61">                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)</span>
 <span class="fc" id="L62">                .exceptionHandling(exceptionHandling -&gt; exceptionHandling.authenticationEntryPoint(</span>
-<span class="fc" id="L63">                        (request, response, exception) -&gt; {</span>
+                        (request, response, exception) -&gt; {
 <span class="fc" id="L64">                            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, exception.getMessage());</span>
 <span class="fc" id="L65">                        }));</span>
 <span class="fc" id="L66">        return http.build();</span>
     }
 
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

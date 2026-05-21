@@ -9,8 +9,8 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = &quot;org.mapstruct.ap.MappingProcessor&quot;,
-    date = &quot;2026-03-23T18:55:36+0100&quot;,
-    comments = &quot;version: 1.6.3, compiler: Eclipse JDT (IDE) 3.45.0.v20260224-0835, environment: Java 21.0.10 (Eclipse Adoptium)&quot;
+    date = &quot;2026-05-21T09:49:46+0200&quot;,
+    comments = &quot;version: 1.6.3, compiler: javac, environment: Java 21.0.10 (Ubuntu)&quot;
 )
 @Component
 <span class="fc" id="L16">public class UserDtoMapperImpl implements UserDtoMapper {</span>
@@ -39,11 +39,11 @@ import org.springframework.stereotype.Component;
 
 <span class="fc" id="L40">        StudentDTO studentDTO = new StudentDTO();</span>
 
-<span class="fc" id="L42">        studentDTO.setCreated_at( user.getCreated_at() );</span>
+<span class="fc" id="L42">        studentDTO.setId( user.getId() );</span>
 <span class="fc" id="L43">        studentDTO.setFirstName( user.getFirstName() );</span>
-<span class="fc" id="L44">        studentDTO.setId( user.getId() );</span>
-<span class="fc" id="L45">        studentDTO.setLastName( user.getLastName() );</span>
-<span class="fc" id="L46">        studentDTO.setLogin( user.getLogin() );</span>
+<span class="fc" id="L44">        studentDTO.setLastName( user.getLastName() );</span>
+<span class="fc" id="L45">        studentDTO.setLogin( user.getLogin() );</span>
+<span class="fc" id="L46">        studentDTO.setCreated_at( user.getCreated_at() );</span>
 <span class="fc" id="L47">        studentDTO.setUpdated_at( user.getUpdated_at() );</span>
 
 <span class="fc" id="L49">        return studentDTO;</span>
@@ -75,4 +75,4 @@ import org.springframework.stereotype.Component;
 <span class="fc" id="L75">        return user;</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

@@ -15,7 +15,7 @@ import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
 
 @Service
-@RequiredArgsConstructor
+<span class="fc" id="L18">@RequiredArgsConstructor</span>
 public class JwtService {
     @Value(&quot;${jwt.secret}&quot;)
     private String jwtSecret;
@@ -42,11 +42,11 @@ public class JwtService {
 
     // Récupérer le username à partir du token JWT
     public String getUsernameFromToken(String token) {
-<span class="nc" id="L45">        return Jwts.parser()</span>
-<span class="nc" id="L46">                .verifyWith(getSignInKey()).build()</span>
-<span class="nc" id="L47">                .parseSignedClaims(token)</span>
-<span class="nc" id="L48">                .getPayload()</span>
-<span class="nc" id="L49">                .getSubject();</span>
+<span class="fc" id="L45">        return Jwts.parser()</span>
+<span class="fc" id="L46">                .verifyWith(getSignInKey()).build()</span>
+<span class="fc" id="L47">                .parseSignedClaims(token)</span>
+<span class="fc" id="L48">                .getPayload()</span>
+<span class="fc" id="L49">                .getSubject();</span>
     }
 
     public long getExpiration() {
@@ -55,15 +55,15 @@ public class JwtService {
 
     public void validateToken(String token) throws JwtException {
         try {
-<span class="nc" id="L58">            Jwts.parser()</span>
-<span class="nc" id="L59">                .verifyWith(getSignInKey())</span>
-<span class="nc" id="L60">                .build()</span>
-<span class="nc" id="L61">                .parseSignedClaims(token)</span>
-<span class="nc" id="L62">                .getPayload();</span>
-<span class="nc" id="L63">        } catch(JwtException e){</span>
+<span class="fc" id="L58">            Jwts.parser()</span>
+<span class="fc" id="L59">                .verifyWith(getSignInKey())</span>
+<span class="fc" id="L60">                .build()</span>
+<span class="fc" id="L61">                .parseSignedClaims(token)</span>
+<span class="fc" id="L62">                .getPayload();</span>
+<span class="fc" id="L63">        } catch(JwtException e){</span>
             // catch null, wrong token, expired token
-<span class="nc" id="L65">            throw new JwtException(e.getMessage());</span>
-        }
-<span class="nc" id="L67">    }</span>
+<span class="fc" id="L65">            throw new JwtException(e.getMessage());</span>
+<span class="fc" id="L66">        }</span>
+<span class="fc" id="L67">    }</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>

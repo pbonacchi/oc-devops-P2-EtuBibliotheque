@@ -8,16 +8,16 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 @Service
-@RequiredArgsConstructor
+<span class="fc" id="L11">@RequiredArgsConstructor</span>
 public class CustomUserDetailService implements UserDetailsService {
 
     private final UserRepository userRepository;
 
     @Override
     public UserDetails loadUserByUsername(String login) throws UsernameNotFoundException {
-<span class="nc" id="L18">        return userRepository.findByLogin(login)</span>
-<span class="nc" id="L19">                .orElseThrow(() -&gt; new UsernameNotFoundException(&quot;User Not Found with username: &quot; + login));</span>
+<span class="fc" id="L18">        return userRepository.findByLogin(login)</span>
+<span class="fc" id="L19">                .orElseThrow(() -&gt; new UsernameNotFoundException(&quot;User Not Found with username: &quot; + login));</span>
     }
 
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.14.202510111229</span></div></body></html>
