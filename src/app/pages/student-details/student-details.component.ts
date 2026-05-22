@@ -35,15 +35,16 @@ export class StudentDetailsComponent implements OnChanges {
     });
   }
 
+  // changements des propriétés entrantes : currentStudent ou isCreating
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['currentStudent'] || changes['isCreating']) {
       if (this.isCreating) {
-        // Mode création: afficher le formulaire vide
+        // Si passage en mode création: afficher le formulaire vide
         this.isEditing = true;
         this.studentForm.reset();
         this.message = '';
       } else if (this.currentStudent && this.currentStudent.id) {
-        // Mode lecture: afficher les détails
+        // Sinon si changement de currentStudent : afficher les détails et passer en mode lecture
         this.studentForm.patchValue(this.currentStudent);
         this.isEditing = false;
       }

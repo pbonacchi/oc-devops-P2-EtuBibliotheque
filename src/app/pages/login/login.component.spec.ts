@@ -46,18 +46,6 @@ describe('LoginComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('UT-CMP-LOG-04: should redirect immediately when already logged in', () => {
-    // UT-CMP-LOG-04
-    // But : vérifier la redirection immédiate quand l'utilisateur est déjà authentifié.
-    // Entrants : isLoggedIn=true + returnUrl présent.
-    // Résultat attendu : navigation vers returnUrl sans soumission du formulaire.
-    activatedRouteStub.snapshot.queryParams = { returnUrl: '/students' };
-    authSpy.isLoggedIn.mockReturnValue(true);
-    component.ngOnInit();
-
-    expect(navigateByUrlSpy).toHaveBeenCalledWith('/students');
-  });
-
   it('UT-CMP-LOG-01: should navigate to returnUrl after successful login', fakeAsync(() => {
     // UT-CMP-LOG-01
     // But : vérifier le parcours succès de connexion avec returnUrl.
@@ -126,5 +114,48 @@ describe('LoginComponent', () => {
     expect(component.errorMessage).toBe('Invalid credentials');
     expect(component.loading).toBe(false);
     expect(navigateByUrlSpy).not.toHaveBeenCalled();
+  });
+
+  it('UT-CMP-LOG-04: should redirect to returnUrl immediately when already logged in', () => {
+    // UT-CMP-LOG-04
+    // But : vérifier la redirection immédiate quand l'utilisateur est déjà authentifié.
+    // Entrants : isLoggedIn=true + returnUrl présent.
+    // Résultat attendu : navigation vers returnUrl sans soumission du formulaire.
+    activatedRouteStub.snapshot.queryParams = { returnUrl: '/students' };
+    authSpy.isLoggedIn.mockReturnValue(true);
+    component.ngOnInit();
+
+    expect(navigateByUrlSpy).toHaveBeenCalledWith('/students');
+  });
+
+  it('UT-CMP-LOG-04B: should redirect immediately to /ma-bibli when already logged in without returnUrl', () => {
+    // UT-CMP-LOG-04B
+    // But : vérifier la redirection immédiate quand l'utilisateur est déjà authentifié sans returnUrl.
+    // Entrants : isLoggedIn=true sans returnUrl.
+    // Résultat attendu : navigation vers /ma-bibli sans soumission du formulaire.
+    activatedRouteStub.snapshot.queryParams = { };
+    authSpy.isLoggedIn.mockReturnValue(true);
+    component.ngOnInit();
+
+    expect(navigateByUrlSpy).toHaveBeenCalledWith('/ma-bibli');
+  });
+
+  it('UT-CMP-LOG-05 : reset form and messages when calling onReset()', () => {
+    // UT-CMP-LOG-05
+    // But : vérifier la réinitialisation du formulaire et des messages lorsque onReset() est appelé.
+    // Entrants : formulaire pré-rempli et submitted=true.
+    // Résultat attendu : formulaire reset, submitted=false, errorMessage et successMessage null.
+    authSpy.isLoggedIn.mockReturnValue(false);
+    fixture.detectChanges();
+
+    component.submitted = true;
+    component.errorMessage = 'une erreur';
+    component.loginForm.setValue({ login: 'x', password: 'x' });
+    component.onReset();
+
+    expect(component.submitted).toBe(false);
+    expect(component.loginForm.value).toEqual({ login: null, password: null });
+    expect(component.errorMessage).toBe(null);
+    expect(component.successMessage).toBe(null);
   });
 });

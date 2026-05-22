@@ -279,4 +279,41 @@ describe('StudentDetailsComponent', () => {
     expect(component.isEditing).toBe(false);
     expect(emitSpy).toHaveBeenCalled();
   });
+
+  it('UT-CMP-STD-14: should set form values and switch to edit mode when enableEdit is called', () => {
+    // UT-CMP-STD-14
+    // But : vérifier que les valeurs du formulaire sont définies et que le mode d'édition est activé lorsque enableEdit est appelé.
+    // Entrants : currentStudent présent.
+    // Résultat attendu : form patché avec currentStudent, isEditing=true.
+    component.currentStudent = { ...currentStudent };
+    component.enableEdit();
+
+    const { id, ...formValues } = currentStudent;
+    expect(component.studentForm.value).toEqual(formValues);
+    expect(component.isEditing).toBe(true);
+  });
+
+  it('UT-CMP-STD-15: should enter creation mode when isCreating becomes true', () => {
+    // UT-CMP-STD-15
+    // But : vérifier que le composant entre en mode création lorsque isCreating devient true.
+    // Entrants : isCreating=true.
+    // Résultat attendu : isEditing=true, form réinitialisé, message='' (aucun message).
+
+    // Préparer un état "sale" pour vérifier que ngOnChanges réinitialise bien
+    component.studentForm.setValue({ firstName: 'x', lastName: 'y', login: 'z' });
+    component.isEditing = false;
+    component.message = 'ancien message';
+  
+    // Simuler ce que fait StudentsList après startCreatingStudent()
+    fixture.componentRef.setInput('isCreating', true);
+    fixture.detectChanges(); // déclenche ngOnChanges
+  
+    expect(component.isEditing).toBe(true);
+    expect(component.studentForm.value).toEqual({
+      firstName: null,
+      lastName: null,
+      login: null,
+    });
+    expect(component.message).toBe('');
+  });
 });
