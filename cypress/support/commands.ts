@@ -1,6 +1,6 @@
 /// <reference types="cypress" />
 /**
- * Commande 1 : cy.setAuthSession() — session sans passer par l’UI login
+ * Commande cy.setAuthSession() — session sans passer par l’UI login
  * Utile pour tester /ma-bibli, /students, etc. sans retester la connexion à chaque fois.
  * L’app stocke dans localStorage (voir auth.service.ts) :
  * - id_token
@@ -17,7 +17,7 @@ Cypress.Commands.add('setAuthSession', (token?: { idToken: string; expiresIn: nu
 }); 
 
 /**
- * Commande 2 : cy.loginByApi() — connexion « réaliste » avec mock
+ * Commande cy.loginByApi() — connexion « réaliste » avec mock
  * Pour les tests qui doivent vérifier le parcours login (formulaire + intercept)
  */
 Cypress.Commands.add('loginByApi', () => {
@@ -38,11 +38,24 @@ Cypress.Commands.add('loginByApi', () => {
 });
 
 /**
- * Commande 3 : cy.mockStudentsList() — stub API students
+ * Commande cy.mockStudentsList() — stub API students
  * Pour les tests qui manipulent /api/students (GET, POST, PUT, DELETE)
  */
 Cypress.Commands.add('mockStudentsList', () => {
     cy.intercept('GET', '/api/students', { fixture: 'students.json' }).as('getStudents');
+});
+
+/**
+ * Commande cy.fillRegisterForm() — remplir le formulaire de registration
+ * Pour les tests qui manipulent /api/register (POST)
+ */
+Cypress.Commands.add('fillRegisterForm', () => {
+    cy.fixture('register-user').then((user) => {
+        cy.get('input[formControlName="firstName"]').type(user.firstName);
+        cy.get('input[formControlName="lastName"]').type(user.lastName);
+        cy.get('input[formControlName="login"]').type(user.login);
+        cy.get('input[formControlName="password"]').type(user.password);
+    });
 });
 
 declare global {
@@ -51,6 +64,7 @@ declare global {
             setAuthSession(token?: { idToken: string; expiresIn: number }): Chainable<void>;
             loginByApi(): Chainable<void>;
             mockStudentsList(): Chainable<void>;
+            fillRegisterForm(): Chainable<void>;
         }
     }
 }
