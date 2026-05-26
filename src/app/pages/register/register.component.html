@@ -1,7 +1,7 @@
 <div class="card m-3">
   <h5 class="card-header">Registration Form</h5>
   <div class="card-body">
-    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+    <form data-cy="register-form" [formGroup]="registerForm" (ngSubmit)="onSubmit()">
       <div class="form-row">
         <div class="form-group col-5">
           <label>First Name</label>
@@ -12,7 +12,7 @@
             [ngClass]="{ 'is-invalid': submitted && form['firstName'].errors }"
           />
           @if (submitted && form['firstName'].errors) {
-            <div class="invalid-feedback">
+            <div class="invalid-feedback" data-cy="invalid-input-firstName">
               @if (form['firstName'].errors?.['required']) {
                 <div>First Name is required</div>
               }
@@ -28,7 +28,7 @@
             [ngClass]="{ 'is-invalid': submitted && form['lastName'].errors }"
           />
           @if (submitted && form['lastName'].errors) {
-            <div class="invalid-feedback">
+            <div class="invalid-feedback" data-cy="invalid-input-lastName">
               @if (form['lastName'].errors?.['required']) {
                 <div>Last Name is required</div>
               }
@@ -45,7 +45,7 @@
           [ngClass]="{ 'is-invalid': submitted && form['login'].errors }"
         />
         @if (submitted && form['login'].errors) {
-          <div class="invalid-feedback">
+          <div class="invalid-feedback" data-cy="invalid-input-login">
             @if (form['login'].errors?.['required']) {
               <div>Login is required</div>
             }
@@ -62,7 +62,7 @@
           [ngClass]="{ 'is-invalid': submitted && form['password'].errors }"
         />
         @if (submitted && form['password'].errors) {
-          <div class="invalid-feedback">
+          <div class="invalid-feedback" data-cy="invalid-input-password">
             @if (form['password'].errors?.['required']) {
               <div>password is required</div>
             }
@@ -70,13 +70,13 @@
         }
       </div>
       <div class="text-center">
-        <button class="btn btn-primary mr-1">Register</button>
-        <button class="btn btn-secondary" type="reset" (click)="onReset()">
+        <button data-cy="register-button" class="btn btn-primary mr-1">Register</button>
+        <button data-cy="cancel-button" class="btn btn-secondary" type="reset" (click)="onReset()">
           Cancel
         </button>
       </div>
       <div class="text-center">
-        Déjà enregistré ? <a routerLink="/login">Je me connecte</a>
+        Déjà enregistré ? <a data-cy="login-link" routerLink="/login">Je me connecte</a>
       </div>
     </form>
   </div>
