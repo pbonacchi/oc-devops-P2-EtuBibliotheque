@@ -1,7 +1,8 @@
 describe('E2E-REG-01 → 05 - Register Component (minimal)', () => {
-    it('should create (E2E-REG-01)', () => {
+    it('should create component & display form (E2E-REG-01)', () => {
         cy.visit('/register');
         cy.get('app-register').should('exist');
+        cy.get('app-register').should('contain', 'Registration Form');
     });
 
     it('should display error messages and not call backend on submit with invalid data (E2E-REG-02)', () => {

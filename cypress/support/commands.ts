@@ -58,6 +58,17 @@ Cypress.Commands.add('fillRegisterForm', () => {
     });
 });
 
+/**
+ * Commande cy.fillLoginForm() — remplir le formulaire de login
+ * Pour les tests qui manipulent /api/login (POST)
+ */
+Cypress.Commands.add('fillLoginForm', () => {
+    cy.fixture('login-user').then((user) => {
+        cy.get('input[formControlName="login"]').type(user.login);
+        cy.get('input[formControlName="password"]').type(user.password);
+    });
+});
+
 declare global {
     namespace Cypress {
         interface Chainable {
@@ -65,6 +76,7 @@ declare global {
             loginByApi(): Chainable<void>;
             mockStudentsList(): Chainable<void>;
             fillRegisterForm(): Chainable<void>;
+            fillLoginForm(): Chainable<void>;
         }
     }
 }
