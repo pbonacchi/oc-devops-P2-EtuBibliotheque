@@ -54,15 +54,43 @@ describe('E2E-STL-01 → 09 - Students List Component (minimal)', () => {
         cy.get('[data-cy="student-details-creation-form"] input[formControlName="login"]').should('be.empty');
     });
 
-    /*it('should create a new student and display it in the list when submitting the creation form (E2E-STL-05)', () => {
+    it('should create a new student and display it in the list when submitting the creation form (E2E-STL-05)', () => {
+      cy.fixture('student-created.json').then((student) => {
+        const createPayload = {
+          firstName: student.firstName,
+          lastName: student.lastName,
+          login: student.login,
+        };
+
+        cy.intercept('POST', '/api/students', {
+          statusCode: 201,
+          body: student,
+        }).as('createStudent');
+
         cy.mockStudentsList();
         cy.openStudentList();
-      
         cy.get('[data-cy="add-student-button"]').click();
-        cy.get('[data-cy="student-details-creation-form"] input[formControlName="firstName"]').type('John');
-        cy.get('[data-cy="student-details-creation-form"] input[formControlName="lastName"]').type('Doe');
-        cy.get('[data-cy="student-details-creation-form"] input[formControlName="login"]').type('john.doe');
+
+        cy.get('[data-cy="student-details-creation-form"] input[formControlName="firstName"]').type(createPayload.firstName);
+        cy.get('[data-cy="student-details-creation-form"] input[formControlName="lastName"]').type(createPayload.lastName);
+        cy.get('[data-cy="student-details-creation-form"] input[formControlName="login"]').type(createPayload.login);
         cy.get('[data-cy="student-details-creation-form"] button[type="submit"]').click();
-    });*/
+
+        cy.wait('@createStudent').then(({ request, response }) => {
+            expect(request.body).to.deep.equal(createPayload);
+            expect(response?.statusCode).to.eq(201);
+            expect(response?.body).to.include({
+              firstName: createPayload.firstName,
+              lastName: createPayload.lastName,
+              login: createPayload.login,
+            });
+            expect(response?.body.id).to.be.a('number');
+        });
+        cy.get('[data-cy="students-list-item"]').should('have.length', 3);
+        cy.get('[data-cy="students-list-item"]').last().should('contain', student.firstName);
+        cy.get('[data-cy="students-list-item"]').last().should('contain', student.lastName);
+        cy.get('[data-cy="student-details-login"]').should('contain', student.login);
+      });
+    });
       
 });
