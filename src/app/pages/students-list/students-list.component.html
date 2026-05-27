@@ -4,6 +4,7 @@
     <ul class="list-group" data-cy="students-list">
       @for (student of students; track student.id; let i = $index) {
       <li class="list-group-item"
+        data-cy="students-list-item"
         [class.active]="i == currentIndex"
         (click)="setActiveStudent(student, i)">
         {{ student.lastName }}, {{ student.firstName }}

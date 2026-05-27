@@ -1,7 +1,7 @@
 @if (isCreating || !currentStudent || !currentStudent.id) {
   @if (isCreating) {
     <!-- MODE CREATION -->
-    <div class="edit-form">
+    <div class="edit-form" data-cy="student-details-creation-form">
       <h4>Ajouter un étudiant</h4>
       <form [formGroup]="studentForm" (ngSubmit)="createStudent()">
         <div class="form-group">
@@ -25,21 +25,22 @@
       </form>
     </div>
   } @else {
-    <p>Sélectionnez un étudiant pour afficher/modifier ses détails ou le supprimer ...</p>
+    <p data-cy="student-details-selection-message">Sélectionnez un étudiant pour afficher/modifier ses détails ou le supprimer ...</p>
   }
 } @else {
 
   <!-- MODE LECTURE -->
   @if (!isEditing) {
-    <h4>Étudiant {{ currentStudent.id }}</h4>
-    <div><strong>Prénom:</strong> {{ currentStudent.firstName }}</div>
-    <div><strong>Nom:</strong> {{ currentStudent.lastName }}</div>
-    <div><strong>Login:</strong> {{ currentStudent.login }}</div>
+    <h4 data-cy="student-details-title">Étudiant {{ currentStudent.id }}</h4>
+    <div data-cy="student-details-firstname"><strong>Prénom:</strong> {{ currentStudent.firstName }}</div>
+    <div data-cy="student-details-lastname"><strong>Nom:</strong> {{ currentStudent.lastName }}</div>
+    <div data-cy="student-details-login"><strong>Login:</strong> {{ currentStudent.login }}</div>
     <button class="m-3 btn btn-sm btn-warning"
+            data-cy="student-details-edit-button"
             (click)="enableEdit()">
       Modifier
     </button>
-    <button class="m-3 btn btn-sm btn-danger" (click)="deleteStudent()">
+    <button class="m-3 btn btn-sm btn-danger" data-cy="student-details-delete-button" (click)="deleteStudent()">
       Supprimer
     </button>
   }

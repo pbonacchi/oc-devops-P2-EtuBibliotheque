@@ -69,6 +69,15 @@ Cypress.Commands.add('fillLoginForm', () => {
     });
 });
 
+/**
+ * Commande cy.openStudentList() — ouvrir la liste des étudiants
+ */
+Cypress.Commands.add('openStudentList', () => {
+    cy.visit('/login');
+    cy.setAuthSession();
+    cy.visit('/students');
+});
+
 declare global {
     namespace Cypress {
         interface Chainable {
@@ -77,6 +86,7 @@ declare global {
             mockStudentsList(): Chainable<void>;
             fillRegisterForm(): Chainable<void>;
             fillLoginForm(): Chainable<void>;
+            openStudentList(): Chainable<void>;
         }
     }
 }
