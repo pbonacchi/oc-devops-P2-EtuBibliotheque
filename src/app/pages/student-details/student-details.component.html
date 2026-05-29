@@ -16,10 +16,10 @@
           <label>Login</label>
           <input class="form-control" formControlName="login" />
         </div>
-        <button type="submit" [disabled]="studentForm.invalid" class="m-3 btn btn-sm btn-success">
+        <button type="submit" [disabled]="studentForm.invalid" class="m-3 btn btn-sm btn-success" data-cy="student-details-creation-form-submit-button">
           Créer
         </button>
-        <button type="button" class="m-3 btn btn-sm btn-secondary" (click)="cancelEdit()">
+        <button type="button" class="m-3 btn btn-sm btn-secondary" (click)="cancelEdit()" data-cy="student-details-creation-form-cancel-button">
           Annuler
         </button>
       </form>
@@ -48,7 +48,7 @@
   @else {
     <div class="edit-form">
       <h4>Modifier étudiant {{ currentStudent.id }}</h4>
-      <form [formGroup]="studentForm" (ngSubmit)="updateStudent()">
+      <form [formGroup]="studentForm" (ngSubmit)="updateStudent()" data-cy="student-details-edit-form">
         <div class="form-group">
           <label>Prénom</label>
           <input class="form-control" formControlName="firstName" />
@@ -61,14 +61,14 @@
           <label>Login</label>
           <input class="form-control" formControlName="login" />
         </div>
-        <button type="submit" [disabled]="studentForm.invalid" class="m-3 btn btn-sm btn-success">
+        <button type="submit" [disabled]="studentForm.invalid" class="m-3 btn btn-sm btn-success" data-cy="student-details-edit-form-submit-button">
           Enregistrer
         </button>
-        <button type="button" class="m-3 btn btn-sm btn-secondary" (click)="cancelEdit()">
+        <button type="button" class="m-3 btn btn-sm btn-secondary" (click)="cancelEdit()" data-cy="student-details-edit-form-cancel-button">
           Annuler
         </button>
       </form>
     </div>
   }
 }
-<p>{{ message }}</p>
+<p data-cy="student-details-feedback-message">{{ message }}</p>

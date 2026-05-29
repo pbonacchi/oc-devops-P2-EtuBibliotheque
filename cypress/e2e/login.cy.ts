@@ -1,4 +1,4 @@
-describe('E2E-LOG-01 → 05 - Login Component (minimal)', () => {
+describe('E2E-LOG-01 → 06 - Login Component: minimal tests', () => {
     beforeEach(() => {
         cy.clearLocalStorage();
     });
@@ -57,7 +57,7 @@ describe('E2E-LOG-01 → 05 - Login Component (minimal)', () => {
     it('should submit valid form with invalid credentials, call POST /api/login, display error message and stay on login page if unsuccessful (E2E-LOG-04)', () => {
         cy.intercept('POST', '/api/login', {
             statusCode: 401,
-            body: { message: 'Invalid credentials' },
+            fixture: 'api-error.json',
         }).as('loginRequest');
         cy.visit('/login');
         cy.fillLoginForm({ login: 'invalid', password: 'invalid' }); // Fill the form with invalid data
@@ -81,5 +81,30 @@ describe('E2E-LOG-01 → 05 - Login Component (minimal)', () => {
         // Check that the form has been reset
         cy.get('input[formControlName="login"]').should('be.empty');
         cy.get('input[formControlName="password"]').should('be.empty');
+    });
+});
+
+describe('E2E-LOG-07 → 09 - Login Component: additional tests (already logged in, custom returnUrl)', () => {
+    beforeEach(() => {
+        cy.clearLocalStorage();
+    });
+
+    it('should redirect immediately to /ma-bibli when already logged in without returnUrl (E2E-LOG-07)', () => {
+        cy.setAuthSession();
+        cy.visit('/login');
+        cy.url().should('include', '/ma-bibli');
+    });
+
+    it('should redirect to returnUrl if provided, after successful login(E2E-LOG-08)', () => {
+        cy.mockStudentsList();
+        cy.loginByApi('/students');
+        cy.url().should('include', '/students');
+    });
+
+    it('should redirect immediately to returnUrl if provided, when already logged in (E2E-LOG-09)', () => {
+        cy.mockStudentsList();
+        cy.setAuthSession();
+        cy.visit('/login?returnUrl=/students');
+        cy.url().should('include', '/students');
     });
 });

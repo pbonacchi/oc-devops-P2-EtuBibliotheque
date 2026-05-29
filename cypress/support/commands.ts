@@ -20,14 +20,14 @@ Cypress.Commands.add('setAuthSession', (token?: { idToken: string; expiresIn: nu
  * Commande cy.loginByApi() — connexion « réaliste » avec mock
  * Pour les tests qui doivent vérifier le parcours login (formulaire + intercept)
  */
-Cypress.Commands.add('loginByApi', () => {
+Cypress.Commands.add('loginByApi', (returnUrl?: string) => {
     cy.intercept('POST', '/api/login', {
         statusCode: 200,
         fixture: 'token.json',
     }).as('loginRequest');
   
     cy.fixture('login-user').then((user) => {
-        cy.visit('/login');
+        cy.visit(`/login${returnUrl ? `?returnUrl=${returnUrl}` : ''}`);
         cy.get('input[formControlName="login"]').type(user.login);
         cy.get('input[formControlName="password"]').type(user.password);
         cy.contains('button', 'Login').click();

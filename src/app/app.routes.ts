@@ -15,5 +15,6 @@ export const routes: Routes = [
   { path: 'login', component: LoginComponent },
   { path: 'ma-bibli', component: MaBibliComponent, canActivate: [AuthGuard] },
   { path: 'students', component: StudentsListComponent, canActivate: [AuthGuard] },
-  { path: 'students/:id', component: StudentDetailsComponent, canActivate: [AuthGuard] }
+  //{ path: 'students/:id', component: StudentDetailsComponent, canActivate: [AuthGuard] },
+  { path: 'students/:id', redirectTo: 'students' , pathMatch: 'full' },
 ];
