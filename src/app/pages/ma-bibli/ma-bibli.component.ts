@@ -10,7 +10,7 @@ import { Router } from '@angular/router';
 })
 export class MaBibliComponent {
   constructor(private authService: AuthService, private router: Router) {
-    console.log('Logged in ? ' + this.authService.isLoggedIn());
+    // console.log('Logged in ? ' + this.authService.isLoggedIn());
   }
 
   logout() {

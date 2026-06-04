@@ -1,4 +1,4 @@
-describe('E2E-REG-01 → 05 - Register Component (minimal)', () => {
+describe('E2E-REG-01 → 06 - Register Component', () => {
     it('should create component & display form (E2E-REG-01)', () => {
         cy.visit('/register');
         cy.get('app-register').should('exist');

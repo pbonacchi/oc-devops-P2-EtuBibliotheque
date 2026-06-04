@@ -15,9 +15,11 @@ jobs:
         working-directory: .
 
     steps:
+      # Récupérer le code source
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Installer Node.js + activer le cache des dépendances basé sur package-lock.json (versions vérouillées)
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -25,13 +27,15 @@ jobs:
           cache: npm
           cache-dependency-path: package-lock.json
 
+      # Installer les dépendances (clean install: pas gestion de versions, utilisation de package-lock.json)
       - name: Install dependencies
         run: npm ci
 
+      # Exécuter les tests unitaires et E2E
       - name: Run unit + E2E tests
         run: npm run test:ci
       
-      # upload Cypress artifacts on failure
+      # Conserver les artefacts Cypress si échec
       - name: Upload Cypress artifacts on failure
         if: failure()
         uses: actions/upload-artifact@v4

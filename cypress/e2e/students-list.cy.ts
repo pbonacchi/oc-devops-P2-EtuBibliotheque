@@ -1,4 +1,4 @@
-describe('E2E-STL-01 → 09 - Students List Component (minimal)', () => {
+describe('E2E-STL-01 → 11 - Students List Component (minimal)', () => {
   beforeEach(() => {
     cy.clearLocalStorage();
   });
