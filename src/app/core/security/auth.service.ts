@@ -2,9 +2,8 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Login } from '../models/Login';
 import { Token } from '../models/Token';
-import { Observable } from 'rxjs';
+//import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
-import moment from 'moment';
 
 @Injectable({
   providedIn: 'root'
@@ -19,9 +18,9 @@ export class AuthService {
   }
 
   private setSession(authResult: Token) {
-    const expiresAt = moment().add(authResult.expiresIn, 'second');
+    const expiresAt = Date.now() + authResult.expiresIn * 1000;
     localStorage.setItem('id_token', authResult.idToken);
-    localStorage.setItem("expires_at", JSON.stringify(expiresAt.valueOf()) );
+    localStorage.setItem("expires_at", String(expiresAt));
   }          
 
   logout() {
@@ -30,7 +29,7 @@ export class AuthService {
   }
 
   public isLoggedIn() {
-    return moment().isBefore(this.getExpiration());
+    return Date.now() < this.getExpiration();
   }
 
   isLoggedOut() {
@@ -38,7 +37,6 @@ export class AuthService {
   }
 
   getExpiration() {
-    const expiresAt = JSON.parse(localStorage.getItem('expires_at') || '0');
-    return moment(expiresAt);
+    return Number(localStorage.getItem('expires_at') || '0');
   }    
 }
