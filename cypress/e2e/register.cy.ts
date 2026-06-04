@@ -57,4 +57,17 @@ describe('E2E-REG-01 → 05 - Register Component (minimal)', () => {
         cy.get('input[formControlName="login"]').should('be.empty');
         cy.get('input[formControlName="password"]').should('be.empty');
     });
+
+    it('should stay on the register page when backend returns 400 (E2E-REG-06)', () => {
+        cy.intercept('POST', '/api/register', {
+            statusCode: 400,
+            body: { message: 'Bad request' },
+        }).as('registerRequest');
+
+        cy.visit('/register');
+        cy.fillRegisterForm(); // Fill the form with valid data
+        cy.get('[data-cy="register-button"]').click();
+        cy.wait('@registerRequest');
+        cy.url().should('include', '/register');
+    });
 });

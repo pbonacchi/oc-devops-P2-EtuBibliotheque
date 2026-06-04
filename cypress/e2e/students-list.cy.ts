@@ -3,7 +3,7 @@ describe('E2E-STL-01 → 09 - Students List Component (minimal)', () => {
     cy.clearLocalStorage();
   });
 
-  it('should create component & display students list (E2E-STL-01)', () => {
+  it('should create component & display students list when backend returns 200 (E2E-STL-01)', () => {
     cy.mockStudentsList();
     cy.openStudentList();
   
@@ -169,6 +169,49 @@ describe('E2E-STL-01 → 09 - Students List Component (minimal)', () => {
         cy.get('[data-cy="student-details-feedback-message"]').should('contain', 'Student deleted successfully');
       });
     });
+  });
+
+  it('should display error message when backend returns 400 on create student and not add it to the list (E2E-STL-10)', () => {
+    cy.fixture('student-created.json').then((student) => {
+      const createPayload = {
+        firstName: student.firstName,
+        lastName: student.lastName,
+        login: student.login,
+      };
+
+      cy.intercept('POST', '/api/students', {
+        statusCode: 400,
+        body: { message: 'Bad request' },
+      }).as('createStudent');
+
+      cy.mockStudentsList();
+      cy.openStudentList();
+      cy.get('[data-cy="students-list-item"]').its('length').then((countBefore) => {
+        cy.get('[data-cy="add-student-button"]').click();
+        cy.get('[data-cy="student-details-creation-form"]').should('be.visible');
+        cy.get('[data-cy="student-details-creation-form"] input[formControlName="firstName"]').type(createPayload.firstName);
+        cy.get('[data-cy="student-details-creation-form"] input[formControlName="lastName"]').type(createPayload.lastName);
+        cy.get('[data-cy="student-details-creation-form"] input[formControlName="login"]').type(createPayload.login);
+        cy.get('[data-cy="student-details-creation-form-submit-button"]').click();
+
+        cy.wait('@createStudent');
+        cy.get('[data-cy="student-details-feedback-message"]').should('contain', 'Error creating student: Bad request');
+        cy.get('[data-cy="students-list-item"]')
+          .should('have.length', countBefore)
+          .and('not.contain', createPayload.firstName)
+          .and('not.contain', createPayload.lastName);
+      });
+    });
+  });
+
+  it('should create component & display an empty list when backend returns 400 (E2E-STL-11)', () => {
+    cy.intercept('GET', '/api/students', {
+      statusCode: 400,
+      body: { message: 'Bad request' },
+    }).as('getStudents');
+
+    cy.openStudentList();
+    cy.get('[data-cy="students-list"]').should('be.empty');
   });
 
 });
