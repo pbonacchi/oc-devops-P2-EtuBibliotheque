@@ -60,7 +60,7 @@ public class UserService {
         if (optionalUser.isPresent()) {
             throw new IllegalArgumentException("User with login " + user.getLogin() + " already exists");
         }
-        user.setPassword(passwordEncoder.encode("password123")); // à remplacer par gestion appropriée des mots de passe
+        user.setPassword(passwordEncoder.encode(System.getenv("DEFAULT_PASSWORD")));
         return userRepository.save(user);
     }
 

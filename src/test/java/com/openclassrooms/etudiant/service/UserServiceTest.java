@@ -222,7 +222,7 @@ public class UserServiceTest {
             .withLogin(LOGIN)
             .withNoPassword()
             .build();
-        String defaultPassword = "password123";
+        String defaultPassword = System.getenv("DEFAULT_PASSWORD");
         String encodedPassword = "encoded-password";
         when(userRepository.findByLogin(LOGIN)).thenReturn(Optional.empty());
         when(passwordEncoder.encode(defaultPassword)).thenReturn(encodedPassword);
