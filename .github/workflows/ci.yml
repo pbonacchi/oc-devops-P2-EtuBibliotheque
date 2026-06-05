@@ -1,0 +1,100 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Run tests and coverage check
+        run: bash mvnw -B verify
+
+      - name: Publish coverage summary
+        if: always()
+        run: |
+          CSV="target/site/jacoco/jacoco.csv"
+          SUMMARY="${GITHUB_STEP_SUMMARY}"
+
+          {
+            echo "## Rapport de couverture JaCoCo"
+            echo ""
+
+            if [[ ! -f "$CSV" ]]; then
+              echo "Rapport non disponible (échec des tests ou rapport non généré)."
+              exit 0
+            fi
+
+            totals=$(awk -F',' 'NR>1 {
+              im+=$4; ic+=$5; bm+=$6; bc+=$7; lm+=$8; lc+=$9
+            }
+            END {
+              instr=(im+ic>0)?100*ic/(im+ic):0
+              br=(bm+bc>0)?100*bc/(bm+bc):0
+              ln=(lm+lc>0)?100*lc/(lm+lc):0
+              printf "instructions|%.1f|%d/%d\nbranches|%.1f|%d/%d\nlines|%.1f|%d/%d\n", \
+                instr, ic, im+ic, br, bc, bm+bc, ln, lc, lm+lc
+            }' "$CSV")
+
+            echo "### Couverture globale"
+            echo ""
+            echo "| Métrique | Couverture | Détail |"
+            echo "|---|---:|---|"
+
+            while IFS='|' read -r metric pct detail; do
+              case "$metric" in
+                instructions) label="Instructions" ;;
+                branches) label="Branches" ;;
+                lines) label="Lignes" ;;
+                *) label="$metric" ;;
+              esac
+              echo "| $label | ${pct}% | $detail |"
+            done <<< "$totals"
+
+            echo ""
+            echo "### Couverture par package"
+            echo ""
+            echo "| Package | Instructions |"
+            echo "|---|---:|"
+
+            awk -F',' 'NR>1 {
+              pkg=$2
+              im[pkg]+=$4
+              ic[pkg]+=$5
+            }
+            END {
+              for (pkg in im) {
+                total=im[pkg]+ic[pkg]
+                if (total > 0) {
+                  printf "%s|%.1f\n", pkg, 100*ic[pkg]/total
+                }
+              }
+            }' "$CSV" | sort | while IFS='|' read -r pkg pct; do
+              echo "| \`$pkg\` | ${pct}% |"
+            done
+
+            echo ""
+            echo "Seuil projet : **>= 80 %** (instructions, bundle JaCoCo avec exclusions)."
+            echo ""
+            echo "Rapport HTML complet disponible dans l'artefact **jacoco-report**."
+          } >> "$SUMMARY"
+
+      - name: Upload JaCoCo report
+        if: always() && hashFiles('target/site/jacoco/index.html') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-report
+          path: target/site/jacoco/
+          retention-days: 14
