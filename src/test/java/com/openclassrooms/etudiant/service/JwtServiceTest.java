@@ -3,11 +3,17 @@ package com.openclassrooms.etudiant.service;
 import com.openclassrooms.etudiant.entities.User;
 import com.openclassrooms.testutils.UserTestBuilder;
 import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.util.ReflectionTestUtils;
+
+import javax.crypto.SecretKey;
+import java.util.Date;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -83,12 +89,16 @@ public class JwtServiceTest {
 
     // UT-JS-VAL-03 - test de la méthode validateToken avec un token expiré
     @Test
-    public void UtJsVal03_ValidateToken_ThrowsJwtException_ForExpiredToken() throws InterruptedException {
+    public void UtJsVal03_ValidateToken_ThrowsJwtException_ForExpiredToken() {
         // GIVEN
-        JwtService shortLivedJwtService = buildJwtService(TEST_JWT_SECRET_BASE64, 1L);
-        User user = UserTestBuilder.aUser().withLogin(LOGIN).build();
-        String expiredToken = shortLivedJwtService.generateToken(user);
-        Thread.sleep(10);
+        SecretKey key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(TEST_JWT_SECRET_BASE64));
+        Date past = new Date(System.currentTimeMillis() - 10_000);
+        String expiredToken = Jwts.builder()
+                .subject(LOGIN)
+                .issuedAt(past)
+                .expiration(new Date(System.currentTimeMillis() - 5_000))
+                .signWith(key)
+                .compact();
 
         // WHEN / THEN
         assertThatThrownBy(() -> jwtService.validateToken(expiredToken))

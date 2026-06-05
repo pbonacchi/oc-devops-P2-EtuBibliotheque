@@ -66,7 +66,6 @@ public class UserServiceTest {
             .withFirstName(FIRST_NAME)
             .withLastName(LAST_NAME)
             .build();
-        //when(passwordEncoder.encode(PASSWORD)).thenReturn(PASSWORD);
         when(userRepository.findByLogin(any())).thenReturn(Optional.empty());
 
         // WHEN

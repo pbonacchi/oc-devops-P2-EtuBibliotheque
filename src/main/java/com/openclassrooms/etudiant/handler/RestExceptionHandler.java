@@ -39,7 +39,6 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
         logError(ex);
         ErrorDetails errorDetails = new ErrorDetails(LocalDateTime.now(), message, request.getDescription(false));
         return handleExceptionInternal(ex, errorDetails, new HttpHeaders(), HttpStatus.BAD_REQUEST, request);
-        //return new ResponseEntity<>(errorDetails, HttpStatus.BAD_REQUEST);
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -50,7 +49,6 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
         logError(ex);
         ErrorDetails errorDetails = new ErrorDetails(LocalDateTime.now(), message, request.getDescription(false));
         return handleExceptionInternal(ex, errorDetails, new HttpHeaders(), HttpStatus.BAD_REQUEST, request);
-        //return new ResponseEntity<>(errorDetails, HttpStatus.BAD_REQUEST);
     }
 
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
