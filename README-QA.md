@@ -1,98 +1,145 @@
-# Plan de tests QA Frontend (Composants + Services)
+# Plan de tests QA Frontend
 
 ## 1) Objectif
 
-Ce document décrit le plan de tests unitaires/intégration légère frontend pour l'application Angular, limité dans un premier temps aux **composants** et **services**.
+Ce document décrit la stratégie de tests frontend pour l'application Angular **EtuBibliothèque** :
+
+- **tests unitaires / intégration légère** : composants, services, sécurité (guard, interceptor) ;
+- **tests E2E** : parcours utilisateur via Cypress avec API mockée.
 
 ## 2) Périmètre (Scope)
 
 ### Inclus
 
-- Composants UI Angular:
+- Composants UI Angular :
   - rendu minimal attendu,
   - interactions utilisateur (clic, submit, reset),
   - gestion d'état d'interface (`loading`, `errorMessage`, `successMessage`, mode édition/création),
   - comportements `Input` / `Output` (ex. `StudentDetailsComponent`).
-- Services frontend:
+- Services frontend :
   - logique métier frontend,
   - appels HTTP (mockés),
   - émission d'événements/notifications (ex. `studentChanged$`),
   - gestion session/authentification côté client (`localStorage`, expiration token).
+- Sécurité frontend :
+  - `AuthGuard` (protection des routes),
+  - `AuthInterceptor` (en-tête `Authorization: Bearer …`).
 - Intégration légère composant-service via mocks/stubs.
+- **Tests E2E Cypress** : navigation, formulaires, garde d'authentification, CRUD étudiant, parcours bout-en-bout (API interceptée, pas de backend réel).
 
 ### Exclu
 
-- Tests E2E (Cypress, Playwright) -> à traiter.
 - Tests backend (controllers, persistence, sécurité serveur).
 - Intégration complète avec serveur réel.
 - Tests de performance frontend, charge, sécurité dynamique.
 - Tests visuels pixel-perfect.
 
-## 3) Types de tests concernés
+## 3) État d'implémentation (snapshot)
+
+| Catégorie | Fichiers / cibles | Tests | Statut |
+| --- | --- | --- | --- |
+| Composants | `AppComponent`, `HomeComponent`, `LoginComponent`, `RegisterComponent`, `MaBibliComponent`, `StudentsListComponent`, `StudentDetailsComponent` | 52 | ✅ Implémenté |
+| Services | `UserService`, `AuthService` | 21 | ✅ Implémenté |
+| Sécurité | `authGuard`, `authInterceptor` | 3 | ✅ Implémenté (smoke + interceptor) |
+| E2E Cypress | 7 fichiers dans `cypress/e2e/` | 37 | ✅ Implémenté |
+| **Total unitaires** | 11 suites `*.spec.ts` | **76** | ✅ Tous passants |
+| **Couverture Jest** | lignes / statements | **~97 % / ~96 %** | ✅ Objectif ≥ 80 % atteint |
+
+Commandes de vérification :
+
+```bash
+npm test          # unitaires + couverture (rapport HTML dans coverage/)
+npm run e2e:ci    # E2E (démarre le serveur Angular automatiquement)
+npm run test:ci   # pipeline complet (CI)
+```
+
+## 4) Types de tests concernés
 
 ### Tests de composants
 
-- **Objectif:** vérifier le comportement visible pour l'utilisateur.
-- **Cibles principales:** `HomeComponent`, `LoginComponent`, `RegisterComponent`, `MaBibliComponent`, `StudentsListComponent`, `StudentDetailsComponent`, `AppComponent`.
-- **Exemples de vérification:** navigation, validation formulaire, affichage états (`loading/error/success`), émission d'events.
+- **Objectif :** vérifier le comportement visible pour l'utilisateur.
+- **Cibles :** `HomeComponent`, `LoginComponent`, `RegisterComponent`, `MaBibliComponent`, `StudentsListComponent`, `StudentDetailsComponent`, `AppComponent`.
+- **Exemples :** navigation, validation formulaire, affichage états (`loading` / `error` / `success`), émission d'events.
 
 ### Tests de services
 
-- **Objectif:** vérifier la logique frontend et les contrats HTTP.
-- **Cibles principales:** `UserService`, `AuthService`.
-- **Exemples de vérification:** URL/méthode HTTP, payload, gestion erreurs, émission Subject, stockage/lecture session.
+- **Objectif :** vérifier la logique frontend et les contrats HTTP.
+- **Cibles :** `UserService`, `AuthService`.
+- **Exemples :** URL/méthode HTTP, payload, gestion erreurs, émission `Subject`, stockage/lecture session.
 
-## 4) Stratégie de test
+### Tests de sécurité (unitaires)
+
+- **Cibles :** `authGuard`, `authInterceptor`.
+- **Exemples :** instanciation du guard ; ajout de l'en-tête `Authorization` lorsque `id_token` est présent dans `localStorage`.
+
+### Tests E2E (Cypress)
+
+- **Objectif :** valider les parcours utilisateur dans un navigateur réel, avec `cy.intercept` pour simuler le backend.
+- **Fichiers :**
+
+| Fichier | IDs de référence | Thème |
+| --- | --- | --- |
+| `home.cy.ts` | E2E-HOM-01 → 03 | Accueil, navigation register/login |
+| `register.cy.ts` | E2E-REG-01 → 06 | Inscription, validation, erreur 400 |
+| `login.cy.ts` | E2E-LOG-01 → 09 | Connexion, returnUrl, déjà connecté |
+| `ma-bibli.cy.ts` | E2E-MA-01 → 02 | Page protégée, déconnexion |
+| `auth-guard.cy.ts` | E2E-GUA-01 → 04 | Redirections, JWT dans les requêtes |
+| `students-list.cy.ts` | E2E-STL-01 → 11 | Liste, CRUD, erreurs API |
+| `user-journey.cy.ts` | E2E-FLOW-01 → 02 | Parcours étudiant et admin complets |
+
+- **Commandes utilitaires** (`cypress/support/commands.ts`) : `setAuthSession`, `loginByApi`, `mockStudentsList`, `fillRegisterForm`, `fillLoginForm`.
+
+## 5) Stratégie de test
 
 ### Isolation
 
 - Dépendances mockées (services, routeur, APIs HTTP).
-- Pas de backend réel.
-- DOM simulé via environnement de test Angular/Jest (pas de navigateur complet).
+- Pas de backend réel en tests (unitaires et E2E).
+- DOM simulé via TestBed/Jest (unitaires) ou navigateur Cypress (E2E).
 - Horloge contrôlée pour les comportements temporels (ex. redirection après timeout login).
 
 ### Approche
 
-- **Composants:** tester les effets observables (rendu/état/navigation/events), éviter les détails d'implémentation interne.
-- **Services:** tester la logique pure + les appels HTTP via `HttpTestingController`.
-- **Priorisation:** parcours critiques en premier (authentification, enregistrement, CRUD étudiant, logout).
+- **Composants :** tester les effets observables (rendu/état/navigation/events), éviter les détails d'implémentation interne.
+- **Services :** tester la logique pure + les appels HTTP via `HttpTestingController`.
+- **E2E :** privilégier les sélecteurs stables (`data-cy`, `formControlName`) et les fixtures (`cypress/fixtures/`).
+- **Priorisation :** parcours critiques en premier (authentification, enregistrement, CRUD étudiant, logout).
 
-## 5) Environnement de test
+## 6) Environnement de test
 
-- Framework frontend: **Angular 19**
-- Runner: **Jest 29**
-- Preset Angular Jest: **jest-preset-angular**
-- Outils Angular test:
-  - `TestBed`,
-  - `ComponentFixture`,
-  - `provideRouter`,
-  - `provideHttpClient`,
-  - `provideHttpClientTesting`,
+- Framework frontend : **Angular 19**
+- Runner unitaire : **Jest 29** + `jest-preset-angular` (config : `jest.config.js`, setup : `setup-jest.ts`)
+- Runner E2E : **Cypress 15** (config : `cypress.config.ts`, `baseUrl` : `http://127.0.0.1:4200`)
+- Outils Angular test :
+  - `TestBed`, `ComponentFixture`,
+  - `provideRouter`, `provideHttpClient`, `provideHttpClientTesting`,
   - `HttpTestingController`.
-- Mocks: `jest.fn()`, spies Jest.
-- Utilitaires async: `fakeAsync`, `tick` (si nécessaire pour timers).
+- Mocks : `jest.fn()`, spies Jest, `cy.intercept()`.
+- Utilitaires async : `fakeAsync`, `tick` (timers login).
 
-## 6) Données de test
+## 7) Données de test
 
-- Jeux de données mockés pour utilisateurs/étudiants:
+- Jeux de données mockés pour utilisateurs/étudiants :
   - cas valides (payload complet),
   - cas invalides (champs requis manquants),
   - cas limites (id absent, tableaux vides),
   - cas erreurs (HTTP 400/401/404/500, erreur réseau).
-- Données auth:
-  - token valide,
+- Données auth :
+  - token valide (`cypress/fixtures/token.json`),
   - token expiré,
   - absence de token.
-- Jeux de réponses API mockées alignées backend:
-  - `POST /api/register`: `201`, `400` (DTO invalide), `400` (login déjà existant),
-  - `POST /api/login`: `200`, `400` (mot de passe invalide), `400` (DTO incomplet),
-  - `POST /api/students`: `201`, `401` (non authentifié), `400` (login étudiant déjà existant),
-  - `GET /api/students`: `200`, `401`,
-  - `GET /api/students/{id}`: `200`, `400` (id inexistant), `401`,
-  - `PUT /api/students/{id}`: `200`, `400` (DTO invalide), `400` (id inexistant), `401`,
-  - `DELETE /api/students/{id}`: `204`, `400` (id inexistant), `401`.
+- Jeux de réponses API mockées alignées backend :
+  - `POST /api/register` : `201`, `400` (DTO invalide), `400` (login déjà existant),
+  - `POST /api/login` : `200`, `400` (mot de passe invalide), `400` (DTO incomplet),
+  - `POST /api/students` : `201`, `401` (non authentifié), `400` (login étudiant déjà existant),
+  - `GET /api/students` : `200`, `401`,
+  - `GET /api/students/{id}` : `200`, `400` (id inexistant), `401`,
+  - `PUT /api/students/{id}` : `200`, `400` (DTO invalide), `400` (id inexistant), `401`,
+  - `DELETE /api/students/{id}` : `204`, `400` (id inexistant), `401`.
 
-## 7) Cas de tests (table de référence)
+## 8) Cas de tests unitaires (table de référence)
+
+Les identifiants `UT-*` sont référencés dans les fichiers `*.spec.ts` (ex. `it('… (UT-CMP-LOG-01)', …)`).
 
 | ID | Type | Cible | Description | Préconditions | Entrées | Action | Résultat attendu |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -155,39 +202,54 @@ Ce document décrit le plan de tests unitaires/intégration légère frontend po
 | UT-SVC-AUT-06 | Service | AuthService | `isLoggedIn` faux si token expiré/absent | `expires_at` passé ou null | aucune | `isLoggedIn()` | retourne false |
 | UT-SVC-AUT-07 | Service | AuthService | `isLoggedOut` cohérent avec `isLoggedIn` | cas connecté puis déconnecté | aucune | `isLoggedOut()` | retourne l'inverse de `isLoggedIn()` |
 
-## 8) Critères d'acceptation
+## 9) Cas de tests E2E (table de référence)
 
-- Tous les tests du plan sont exécutés en CI et en local.
-- 0 échec sur les tests critiques (`Login`, `Register`, `UserService`, `AuthService`).
-- Couverture globale (lines/statements) >= **80%** (exigence projet).
-- Aucune régression critique détectée sur les parcours auth et CRUD étudiants.
-- Les tests sont stables (pas de flaky tests sur 3 exécutions consécutives).
-- Couverture fonctionnelle minimale:
+Les identifiants `E2E-*` sont portés par les titres `it('… (E2E-…)', …)` dans `cypress/e2e/`.
+
+| ID | Fichier | Description synthétique |
+| --- | --- | --- |
+| E2E-HOM-01 → 03 | `home.cy.ts` | Rendu accueil, navigation register/login |
+| E2E-REG-01 → 06 | `register.cy.ts` | Formulaire inscription, succès, erreur 400, reset |
+| E2E-LOG-01 → 09 | `login.cy.ts` | Formulaire login, succès/échec, returnUrl, session existante |
+| E2E-MA-01 → 02 | `ma-bibli.cy.ts` | Accès page protégée, logout |
+| E2E-GUA-01 → 04 | `auth-guard.cy.ts` | Redirections non authentifié, accès authentifié, header JWT |
+| E2E-STL-01 → 11 | `students-list.cy.ts` | Liste, sélection, CRUD, annulations, erreurs API |
+| E2E-FLOW-01 → 02 | `user-journey.cy.ts` | Parcours inscription → login → ma-bibli ; parcours admin CRUD |
+
+## 10) Critères d'acceptation
+
+- Tous les tests unitaires et E2E sont exécutés en CI (`npm run test:ci`) et en local.
+- 0 échec sur les tests critiques (`Login`, `Register`, `UserService`, `AuthService`, parcours E2E FLOW).
+- Couverture globale (lines/statements) ≥ **80 %** — **atteint (~97 % lignes)**.
+- Aucune régression critique sur les parcours auth et CRUD étudiants.
+- Tests stables (pas de flaky tests sur 3 exécutions consécutives).
+- Couverture fonctionnelle minimale :
   - chaque endpoint frontend consommé (`register`, `login`, `getAll`, `get`, `create`, `update`, `delete`) a au moins 1 cas succès + 1 cas erreur,
   - les erreurs backend métiers connues (`400`, `401`) sont couvertes côté services et répercutées dans les composants critiques.
 
-## 9) Critères d'entrée / sortie
+## 11) Critères d'entrée / sortie
 
 ### Entrée
 
 - Composants/services cibles implémentés.
 - Contrats API frontend stabilisés (URL, méthodes, payloads, codes erreurs).
-- Environnement Jest opérationnel (`npm test` OK).
-- Données mock de référence définies.
+- Environnement Jest + Cypress opérationnel (`npm run test:ci` OK).
+- Données mock de référence définies (`cypress/fixtures/`).
 
 ### Sortie
 
-- Tous les cas du scope exécutés.
+- Tous les cas du scope exécutés (unitaires + E2E).
 - Tous les tests critiques passent.
 - Défauts bloquants/majeurs corrigés ou documentés avec décision.
-- Rapport de couverture démontré >= 80%.
+- Rapport de couverture démontré ≥ 80 %.
 
-## 10) Outils utilisés
+## 12) Outils utilisés
 
-- `Jest` (runner + assertions + mocks),
+- **Jest** (runner + assertions + mocks),
 - `jest-preset-angular`,
 - `@angular/core/testing` (`TestBed`, `ComponentFixture`),
 - `@angular/common/http/testing` (`HttpTestingController`, `provideHttpClientTesting`),
 - `@angular/router` testing providers (`provideRouter`),
-- spies/mocks Jest (`jest.fn`, `jest.spyOn`).
-
+- spies/mocks Jest (`jest.fn`, `jest.spyOn`),
+- **Cypress** (`cy.intercept`, fixtures, commandes personnalisées),
+- **start-server-and-test** (orchestration serveur + E2E en CI).

@@ -1,59 +1,114 @@
-# EtudiantFrontend
+# EtuBibliothèque — Frontend
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.2.16.
+Application Angular du projet **EtuBibliothèque** : inscription, authentification JWT et gestion d'étudiants (CRUD).
 
-## Development server
+| Élément | Version / outil |
+| --- | --- |
+| Framework | Angular 19 |
+| UI | Angular Material |
+| Tests unitaires | Jest 29 + `jest-preset-angular` |
+| Tests E2E | Cypress 15 |
+| CI | GitHub Actions (`.github/workflows/ci.yml`) |
 
-To start a local development server, run:
+## Prérequis
+
+- **Node.js** 22 (recommandé, aligné sur la CI)
+- **npm** (avec `package-lock.json` pour `npm ci`)
+- **Backend** accessible sur `http://localhost:8080` pour le développement local (proxy API configuré)
+
+## Installation
+
+```bash
+npm ci
+```
+
+## Démarrage en développement
+
+Lancer le serveur de développement (proxy `/api` → backend sur le port 8080) :
 
 ```bash
 ng serve
+# équivalent : npm start
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+Ouvrir [http://localhost:4200/](http://localhost:4200/). L'application se recharge automatiquement à chaque modification des sources.
 
-## Code scaffolding
+## Routes principales
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+| Route | Composant | Accès |
+| --- | --- | --- |
+| `/` | `HomeComponent` | Public |
+| `/register` | `RegisterComponent` | Public |
+| `/login` | `LoginComponent` | Public |
+| `/ma-bibli` | `MaBibliComponent` | Protégé (`AuthGuard`) |
+| `/students` | `StudentsListComponent` + `StudentDetailsComponent` | Protégé (`AuthGuard`) |
+
+## Build
 
 ```bash
-ng generate component component-name
+npm run build
+# équivalent : ng build
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+Les artefacts de production sont générés dans `dist/etudiant-frontend/`.
+
+## Tests
+
+### Tests unitaires (Jest)
 
 ```bash
-ng generate --help
+npm test              # exécution unique + rapport de couverture HTML (dossier coverage/)
+npm run test:watch    # mode interactif
 ```
 
-## Building
+**État actuel :** 11 suites, 76 tests — couverture ~97 % (lignes), objectif projet ≥ 80 % atteint.
 
-To build the project run:
+Fichiers de test : `src/**/*.spec.ts` (composants, services, guard, interceptor).
+
+### Tests E2E (Cypress)
+
+Les tests E2E mockent les appels API via `cy.intercept` ; le backend n'est pas requis.
 
 ```bash
-ng build
+npm run e2e:open      # interface Cypress (serveur Angular à lancer séparément)
+npm run e2e           # exécution headless (serveur requis sur http://127.0.0.1:4200)
+npm run e2e:ci        # démarre Angular + lance Cypress (utilisé en CI)
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+Scénarios dans `cypress/e2e/` : accueil, login, register, garde d'authentification, liste étudiants, parcours complets.
 
-## Running unit tests
-
-To execute unit tests with the [Jest](https://jestjs.io/) test runner, use the following command:
+### Pipeline complet (comme en CI)
 
 ```bash
-jest
+npm run test:ci       # tests unitaires + E2E
 ```
 
-## Running end-to-end tests
+## Intégration continue
 
-For end-to-end (e2e) testing, run:
+Le workflow **CI Frontend** (push/pull request sur `main` ou `master`) exécute `npm run test:ci` sous Node.js 22. En cas d'échec Cypress, les captures d'écran et vidéos sont conservées en artefact.
 
-```bash
-ng e2e
+## Structure du projet
+
+```
+src/app/
+├── core/
+│   ├── models/          # Login, Register, Student, Token
+│   ├── security/        # AuthService, AuthGuard, AuthInterceptor
+│   └── service/         # UserService (+ UserMockService)
+├── pages/               # Home, Login, Register, MaBibli, StudentsList, StudentDetails
+└── shared/              # MaterialModule
+cypress/
+├── e2e/                 # Scénarios E2E
+├── fixtures/            # Données mock (token, étudiants, erreurs API)
+└── support/             # Commandes Cypress personnalisées
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+## Documentation QA
 
-## Additional Resources
+Le plan de tests détaillé (cas unitaires, E2E, critères d'acceptation) est décrit dans [README-QA.md](./README-QA.md).
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+## Ressources
+
+- [Angular CLI — référence des commandes](https://angular.dev/tools/cli)
+- [Documentation Jest](https://jestjs.io/docs/getting-started)
+- [Documentation Cypress](https://docs.cypress.io/)
