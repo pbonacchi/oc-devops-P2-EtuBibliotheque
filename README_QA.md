@@ -24,13 +24,13 @@ Objectif principal : vérifier la qualité fonctionnelle et technique du socle u
 | `RestExceptionHandler` | `RestExceptionHandlerTest` | Unitaire | Réponses HTTP d'erreur (400, 401, 403, 500) |
 | `UserController` | `UserControllerTest` | Intégration | API REST, sécurité, validation DTO, persistance MySQL |
 
-Couverture indirecte (sans test dédié) : `SpringSecurityConfig`, `AppConfig`, `RequestLoggingFilterConfig`, `UserDtoMapperImpl` — exercés via le contexte Spring des tests d'intégration et/ou la chaîne métier.
+Couverture indirecte (sans test dédié) : `SpringSecurityConfig`, `RequestLoggingFilterConfig`, `UserDtoMapperImpl` — exercés via le contexte Spring des tests d'intégration et/ou la chaîne métier.
 
 ### Ce qui n'est pas (ou partiellement) testé
 
 - `SpringSecurityConfig` : pas de tests unitaires dédiés (configuration de filtres et règles d'autorisation)
 - Scénarios de charge, E2E front-back, résilience/chaos
-- Classes exclues du rapport JaCoCo (voir section dédiée) : pas d'objectif de couverture directe sur ces artefacts
+- Classes exclues du rapport JaCoCo (voir [section dédiée](#exclusions-jacoco-périmètre-du-calcul)) : pas d'objectif de couverture directe sur ces artefacts
 
 ### Hors périmètre
 
@@ -53,7 +53,8 @@ Couverture indirecte (sans test dédié) : `SpringSecurityConfig`, `AppConfig`, 
 ### 1) Tests unitaires (service, sécurité, handler)
 
 - Isolation via mocks (Mockito) ou instanciation directe (`JwtService`, `RestExceptionHandler`)
-- `ReflectionTestUtils` pour injecter secret et expiration JWT sans contexte Spring
+- `ReflectionTestUtils` pour injecter le secret et l'expiration JWT (`JwtServiceTest`), ou le mot de passe par défaut (`UserServiceTest`, champ `@Value`)
+- Token JWT expiré construit directement via `Jwts.builder()` (sans `Thread.sleep`) dans `JwtServiceTest`
 - `MockHttpServletRequest` / `MockHttpServletResponse` pour le filtre JWT
 - Frameworks : JUnit 5, Mockito, AssertJ
 - Vérification des interactions (`verify`) et des exceptions fonctionnelles
@@ -74,13 +75,14 @@ Couverture indirecte (sans test dédié) : `SpringSecurityConfig`, `AppConfig`, 
 - Framework : Spring Boot 3.5.5
 - Base de données de test : MySQL (Testcontainers 2.0.3)
 - Sécurité : Spring Security + JWT
-- Couverture : JaCoCo 0.8.12 (seuil 80 % configuré dans `pom.xml`)
+- Couverture : JaCoCo 0.8.15 (seuil 80 % configuré dans `pom.xml`, version héritée du parent Spring Boot)
+- Configuration de test : `src/test/resources/application.yml` (`DEFAULT_PASSWORD`, secret JWT factice) + `@DynamicPropertySource` dans `UserControllerTest` (datasource Testcontainers)
 
 ## Données de test
 
 - Jeux valides :
   - utilisateurs complets (`firstName`, `lastName`, `login`, `password`)
-  - étudiants valides pour create/update
+  - étudiants valides pour create/update (`createStudent` : mot de passe par défaut via `DEFAULT_PASSWORD`)
   - tokens JWT signés avec secret de test (Base64)
 - Jeux invalides / erreurs :
   - champs manquants, payload vides, JSON malformé
@@ -155,23 +157,37 @@ Couverture indirecte (sans test dédié) : `SpringSecurityConfig`, `AppConfig`, 
 - Testcontainers (MySQL)
 - Maven Surefire
 - JaCoCo
+- GitHub Actions (CI)
+
+## Intégration continue
+
+Un workflow GitHub Actions (`.github/workflows/ci.yml`) exécute `./mvnw verify` à chaque push sur `main` et sur chaque pull request :
+
+- exécution des 58 tests (Docker requis pour Testcontainers) ;
+- vérification du seuil JaCoCo **≥ 80 %** ;
+- publication d'un résumé de couverture dans l'onglet **Summary** du job ;
+- dépôt du rapport HTML en artefact **`jacoco-report`** (14 jours de rétention).
+
+Les rapports JaCoCo ne sont **pas versionnés** dans Git (`target/` ignoré).
 
 ## Rapport de couverture
 
 ### Génération
 
-JaCoCo est intégré au cycle Maven (`prepare-agent`, `report`, `check`). Commande recommandée :
+JaCoCo est intégré au cycle Maven (`prepare-agent`, `report`, `check`).
+
+Générer le rapport HTML (sans vérifier le seuil) :
 
 ```bash
-mvn test
+./mvnw test
 ```
 
-Rapport HTML : `target/site/jacoco/index.html`
+Rapport HTML local : `target/site/jacoco/index.html`
 
-Vérification du seuil 80 % (échoue si non atteint) :
+Exécuter les tests **et** vérifier le seuil 80 % (échoue si non atteint) :
 
 ```bash
-mvn verify
+./mvnw verify
 ```
 
 ### Exclusions JaCoCo (périmètre du calcul)
@@ -189,15 +205,15 @@ Ces exclusions visent à mesurer la couverture du **code applicatif exécutable*
 
 ### Résultats (dernier rapport généré)
 
-> Chiffres issus de `target/site/jacoco/index.html` après exécution complète des 58 tests (hors classes exclues).
+> Chiffres issus de `target/site/jacoco/jacoco.csv` après `./mvnw verify` du 2026-06-09 — 58 tests, 9 classes analysées (hors exclusions JaCoCo).
 
 **Couverture globale :**
 
 | Métrique | Valeur |
 |---|---|
-| Instructions | **99 %** (864/871) |
+| Instructions | **99 %** (850/857) |
 | Branches | **84 %** (22/26) |
-| Lignes | **200/204** |
+| Lignes | **196/200** (98 %) |
 
 **Résultats de tests :**
 
@@ -219,21 +235,19 @@ Ces exclusions visent à mesurer la couverture du **code applicatif exécutable*
 | `service` | 100 % |
 | `configuration.security` | 100 % |
 | `handler` (`RestExceptionHandler`) | 100 % |
-| `mapper` | 93 % |
-| `configuration` / `configuration.logging` | 100 % |
-
-Point d'attention : le package `mapper` reste à **93 %** (branches MapStruct partiellement non couvertes — cas `null` sur certains DTO).
+| `mapper` | 93 % (DTO null non testés) |
+| `configuration.logging` | 100 % |
 
 ## Critères d'acceptation
 
 - Tous les tests exécutés sans échec
 - Aucune régression critique sur parcours login/register/CRUD et sécurité JWT
-- Rapport de couverture généré et archivable
+- Rapport de couverture généré localement ou en artefact CI (non versionné dans Git)
 - Seuil projet : **>= 80 %** de couverture globale (instructions, bundle JaCoCo avec exclusions)
 
 **État actuel vs seuil :**
 
-- **99 % >= 80 %** → critère global **atteint** (sur périmètre JaCoCo configuré)
+- **99 % ≥ 80 %** → critère global **atteint** (sur périmètre JaCoCo configuré)
 
 ## Critères d'entrée / sortie
 
@@ -245,6 +259,6 @@ Point d'attention : le package `mapper` reste à **93 %** (branches MapStruct pa
 
 ### Sortie
 
-- 58 tests unitaires + intégration exécutés
-- Rapports Surefire et JaCoCo générés
-- Seuil JaCoCo `mvn verify` validé si pipeline qualité complet
+- 58 tests exécutés (37 unitaires + 21 intégration)
+- Rapports Surefire et JaCoCo générés dans `target/` (local) ou artefact CI
+- Seuil JaCoCo `./mvnw verify` validé (local ou pipeline GitHub Actions)

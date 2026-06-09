@@ -1,18 +1,43 @@
 # MS etudiant-backend
 
-Backend qui gère les APIs des utilisateurs de la bibliothèque et les CRUD des étudiants.
+Backend Spring Boot qui expose les APIs d'authentification JWT, d'inscription et de gestion des étudiants de la bibliothèque (CRUD).
 
-## Configuration du backend
+## Prérequis et environnement
 
-    - name: etudiant-backend
-    - port: 8080
+| Paramètre | Valeur |
+|---|---|
+| Nom de l'application | `etudiant-backend` |
+| Port HTTP | `8080` |
+| Java | 21 |
+| Spring Boot | 3.5.5 |
 
-## Pré-requis pour le bon fonctionnement du service :
+### Pré-requis pour le bon fonctionnement du service :
 
     -> JDK 21
     -> Docker
     -> Docker Compose
     -> Maven 3.9.3 (https://archive.apache.org/dist/maven/maven-3/3.9.3/binaries/) ou plus
+
+### Variables d'environnement
+
+Le fichier `.env` à la racine du projet est chargé automatiquement via `spring.config.import` (voir `src/main/resources/application.yml`). Créez-le à partir du modèle ci-dessous si nécessaire :
+
+```properties
+DB_USER=etudiant_db
+DB_PASSWORD=etudiant_db
+DB_HOST=localhost
+DB_PORT=3306
+DB_NAME=etudiant_db
+
+JWT_SECRET=<clé secrète pour signer les JWT>
+DEFAULT_PASSWORD=<mot de passe par défaut assigné aux étudiants créés par un admin>
+```
+
+| Variable | Usage |
+|---|---|
+| `DB_*` | Connexion MySQL (Docker Compose en local) |
+| `JWT_SECRET` | Signature des tokens JWT |
+| `DEFAULT_PASSWORD` | Mot de passe initial des étudiants créés via `POST /api/students` |
 
 ## Démarrage du backend
 Pour démarrer le projet backend, il faut : 
@@ -23,10 +48,11 @@ mvn spring-boot:run
 ```
 
 Cette commande va : 
- - initialiser le container Docker qui contient la base de données 
+ - initialiser le container Docker qui contient la base de données (MySQL défini dans `compose.yaml`)
  - lancer le serveur du backend et le connecter à la base de données précédemment créée
+ - créer ou mettre à jour le schéma JPA (`ddl-auto: update`)
 
-Les traces logs devraient ressemblées à ceci : 
+Les traces logs devraient ressembler à ceci : 
 ```
 .   ____          _            __ _ _
 /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
@@ -105,6 +131,21 @@ La capture d'écran ci-dessous résume les étapes précédentes :
 
 ![2-docker-desktop-bdd](pictures/2-docker-desktop-bdd.png)
 
+## APIs exposées
+
+| Méthode | Endpoint | Auth | Description |
+|---|---|---|---|
+| `POST` | `/api/register` | Non | Inscription d'un étudiant (mot de passe fourni dans le corps) |
+| `POST` | `/api/login` | Non | Authentification → retourne un JWT |
+| `POST` | `/api/students` | Oui | Création d'un étudiant par un admin (mot de passe par défaut) |
+| `GET` | `/api/students` | Oui | Liste des étudiants |
+| `GET` | `/api/students/{id}` | Oui | Détail d'un étudiant |
+| `PUT` | `/api/students/{id}` | Oui | Mise à jour d'un étudiant |
+| `DELETE` | `/api/students/{id}` | Oui | Suppression d'un étudiant |
+
+Les endpoints marqués « Oui » dans la colonne Auth nécessitent un header `Authorization: Bearer <token>` (JWT obtenu via `POST /api/login`).
+
+Les réponses JSON utilisent le camelCase (`createdAt`, `updatedAt`) ; en base MySQL, les colonnes correspondantes sont `created_at` et `updated_at`, renseignées automatiquement côté serveur.
 
 ## Exécution des tests
 Pour exécuter les tests Junit, il faut :
@@ -112,20 +153,26 @@ Pour exécuter les tests Junit, il faut :
 - dans une console, se placer à la racine du projet et exécuter la commande Maven suivante :
 
 ```
-mvn clean test
+./mvnw verify
 ```
 
-## Fonctionnalités portées
+Cette commande :
+- exécute l'ensemble des tests (58 au total : unitaires + intégration) ;
+- génère le rapport de couverture JaCoCo dans `target/site/jacoco/` (non versionné) ;
+- vérifie le seuil de couverture **≥ 80 %** configuré dans `pom.xml` (phase `jacoco:check`).
 
-    - API de création d'un utilisateur (agent de la bibliothèque)
-    - API d'authentification d'un utilisateur (à faire)
-    - APIs CRUD des étudiants de la bibliothèque (à faire)
+Pour exécuter les tests et générer le rapport **sans** vérifier le seuil : `./mvnw test`.
 
+Pour le détail des scénarios de test, des exclusions JaCoCo et des critères d'acceptation, voir [README_QA.md](README_QA.md).
 
-## Écrans ou blocs concernés
-    - Ecran xxx
-    - Ecran xxx
-    - Ecran xxx
+## Intégration continue
 
+Un workflow GitHub Actions (`.github/workflows/ci.yml`) exécute `./mvnw verify` à chaque push sur `main` et sur chaque pull request. Le rapport JaCoCo est publié en résumé du job et en artefact téléchargeable.
 
+## Stack technique
 
+- Spring Boot 3.5 (Web, Security, Data JPA, Validation, Actuator)
+- MySQL + Docker Compose (dev) / Testcontainers (tests)
+- JWT (jjwt)
+- MapStruct, Lombok
+- JaCoCo, JUnit 5, Mockito, AssertJ
