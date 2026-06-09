@@ -14,6 +14,6 @@ public class StudentDTO {
     private String firstName;
     private String lastName;
     private String login;
-    private LocalDateTime created_at;
-    private LocalDateTime updated_at;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }
