@@ -48,9 +48,10 @@ Ce document décrit la stratégie de tests frontend pour l'application Angular *
 Commandes de vérification :
 
 ```bash
-npm test          # unitaires + couverture (rapport HTML dans coverage/)
-npm run e2e:ci    # E2E (démarre le serveur Angular automatiquement)
-npm run test:ci   # pipeline complet (CI)
+npm test                  # unitaires + couverture Jest (rapport HTML dans coverage/)
+npm run e2e:ci            # E2E headless (serveur Angular démarré automatiquement)
+npm run e2e:coverage      # E2E + couverture Cypress (rapport dans coverage-e2e/)
+npm run test:ci           # pipeline complet (CI)
 ```
 
 ## 4) Types de tests concernés

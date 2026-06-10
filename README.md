@@ -52,13 +52,28 @@ npm run build
 
 Les artefacts de production sont générés dans `dist/etudiant-frontend/`.
 
+## Scripts npm
+
+| Commande | Usage |
+| --- | --- |
+| `npm start` | Serveur de développement |
+| `npm run build` | Build production |
+| `npm test` | Tests unitaires Jest + couverture (`coverage/`) |
+| `npm run test:watch` | Jest en mode interactif |
+| `npm run test:ci` | Pipeline CI : unitaires Jest + E2E Cypress avec couverture |
+| `npm run e2e:open` | Cypress interactif (lancer `npm start` dans un autre terminal) |
+| `npm run e2e:ci` | E2E headless (démarre le serveur automatiquement) |
+| `npm run e2e:coverage` | E2E + rapport de couverture (`coverage-e2e/`) |
+| `npm run e2e:coverage:open` | Cypress interactif avec code instrumenté |
+| `npm run e2e:coverage:report` | Régénère le rapport E2E après une session `e2e:coverage:open` |
+
 ## Tests
 
 ### Tests unitaires (Jest)
 
 ```bash
-npm test              # exécution unique + rapport de couverture HTML (dossier coverage/)
-npm run test:watch    # mode interactif
+npm test
+npm run test:watch
 ```
 
 **État actuel :** 11 suites, 76 tests — couverture ~97 % (lignes), objectif projet ≥ 80 % atteint.
@@ -70,9 +85,9 @@ Fichiers de test : `src/**/*.spec.ts` (composants, services, guard, interceptor)
 Les tests E2E mockent les appels API via `cy.intercept` ; le backend n'est pas requis.
 
 ```bash
-npm run e2e:open      # interface Cypress (serveur Angular à lancer séparément)
-npm run e2e           # exécution headless (serveur requis sur http://127.0.0.1:4200)
-npm run e2e:ci        # démarre Angular + lance Cypress (utilisé en CI)
+npm run e2e:ci          # headless, serveur démarré automatiquement
+npm run e2e:open        # interface Cypress (npm start requis à part)
+npm run e2e:coverage    # headless + rapport de couverture E2E
 ```
 
 Scénarios dans `cypress/e2e/` : accueil, login, register, garde d'authentification, liste étudiants, parcours complets.
@@ -80,12 +95,12 @@ Scénarios dans `cypress/e2e/` : accueil, login, register, garde d'authentificat
 ### Pipeline complet (comme en CI)
 
 ```bash
-npm run test:ci       # tests unitaires + E2E
+npm run test:ci
 ```
 
 ## Intégration continue
 
-Le workflow **CI Frontend** (push/pull request sur `main` ou `master`) exécute `npm run test:ci` sous Node.js 22. En cas d'échec Cypress, les captures d'écran et vidéos sont conservées en artefact.
+Le workflow **CI Frontend** (push/pull request sur `main` ou `master`) exécute Jest puis Cypress avec couverture sous Node.js 22. Les rapports HTML sont publiés en artefacts (`coverage-jest`, `coverage-e2e`). En cas d'échec Cypress, les captures d'écran et vidéos sont également conservées.
 
 ## Structure du projet
 

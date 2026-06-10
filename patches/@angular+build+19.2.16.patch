@@ -1,0 +1,68 @@
+diff --git a/node_modules/@angular/build/src/builders/application/options.js b/node_modules/@angular/build/src/builders/application/options.js
+index 0c2ffcd..e47fd91 100755
+--- a/node_modules/@angular/build/src/builders/application/options.js
++++ b/node_modules/@angular/build/src/builders/application/options.js
+@@ -72,7 +72,15 @@ async function normalizeOptions(context, projectName, options, extensions) {
+     const entryPoints = normalizeEntryPoints(workspaceRoot, options.browser, options.entryPoints);
+     const tsconfig = node_path_1.default.join(workspaceRoot, options.tsConfig);
+     const optimizationOptions = (0, utils_1.normalizeOptimization)(options.optimization);
+-    const sourcemapOptions = (0, utils_1.normalizeSourceMaps)(options.sourceMap ?? false);
++    let sourcemapOptions = (0, utils_1.normalizeSourceMaps)(options.sourceMap ?? false);
++    if (options.codeCoverage) {
++        sourcemapOptions = {
++            scripts: true,
++            styles: true,
++            vendor: true,
++            hidden: false,
++        };
++    }
+     const assets = options.assets?.length
+         ? (0, utils_1.normalizeAssetPatterns)(options.assets, workspaceRoot, projectRoot, projectSourceRoot)
+         : undefined;
+@@ -244,8 +252,22 @@ async function normalizeOptions(context, projectName, options, extensions) {
+             }
+             : undefined,
+     };
++    let instrumentForCoverage = options.instrumentForCoverage;
++    if (options.codeCoverage) {
++        const fast_glob_1 = __importDefault(require("fast-glob"));
++        const excludedPaths = new Set();
++        for (const excludeGlob of options.codeCoverageExclude ?? []) {
++            const excludePath = excludeGlob[0] === '/' ? excludeGlob.slice(1) : excludeGlob;
++            fast_glob_1.default.sync(excludePath, { cwd: workspaceRoot }).forEach((p) => excludedPaths.add(node_path_1.default.join(workspaceRoot, p)));
++        }
++        instrumentForCoverage = (request) => {
++            return (!excludedPaths.has(request) &&
++                !/\.(e2e|spec)\.tsx?$|[\\/]node_modules[\\/]/.test(request) &&
++                request.startsWith(projectSourceRoot));
++        };
++    }
+     // Initial options to keep
+-    const { allowedCommonJsDependencies, aot = true, baseHref, crossOrigin, externalDependencies, extractLicenses, inlineStyleLanguage = 'css', outExtension, serviceWorker, poll, polyfills, statsJson, outputMode, stylePreprocessorOptions, subresourceIntegrity, verbose, watch, progress = true, externalPackages, namedChunks, budgets, deployUrl, clearScreen, define, partialSSRBuild = false, externalRuntimeStyles, instrumentForCoverage, } = options;
++    const { allowedCommonJsDependencies, aot = true, baseHref, crossOrigin, externalDependencies, extractLicenses, inlineStyleLanguage = 'css', outExtension, serviceWorker, poll, polyfills, statsJson, outputMode, stylePreprocessorOptions, subresourceIntegrity, verbose, watch, progress = true, externalPackages, namedChunks, budgets, deployUrl, clearScreen, define, partialSSRBuild = false, externalRuntimeStyles, } = options;
+     // Return all the normalized options
+     return {
+         advancedOptimizations: !!aot && optimizationOptions.scripts,
+diff --git a/node_modules/@angular/build/src/builders/application/schema.json b/node_modules/@angular/build/src/builders/application/schema.json
+index e2bf1f3..08baeba 100755
+--- a/node_modules/@angular/build/src/builders/application/schema.json
++++ b/node_modules/@angular/build/src/builders/application/schema.json
+@@ -47,6 +47,18 @@
+       "type": "string",
+       "description": "Customize the base path for the URLs of resources in 'index.html' and component stylesheets. This option is only necessary for specific deployment scenarios, such as with Angular Elements or when utilizing different CDN locations."
+     },
++    "codeCoverage": {
++      "type": "boolean",
++      "description": "Instrument application code for Istanbul code coverage collection (e.g. Cypress E2E).",
++      "default": false
++    },
++    "codeCoverageExclude": {
++      "type": "array",
++      "description": "Globs to exclude from code coverage instrumentation.",
++      "items": {
++        "type": "string"
++      }
++    },
+     "security": {
+       "description": "Security features to protect against XSS and other common attacks",
+       "type": "object",

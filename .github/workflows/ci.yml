@@ -2,7 +2,7 @@ name: CI Frontend
 
 on:
   push:
-    branches: [main, master]
+    branches: [main, master, e2e-coverage]
   pull_request:
     branches: [main, master]
 
@@ -31,19 +31,34 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # Exécuter les tests unitaires et E2E
-      - name: Run unit + E2E tests
-        run: npm run test:ci
+      # Tests unitaires Jest (couverture + seuil minimum 80 %)
+      - name: Run Jest unit tests
+        run: npm test
+        env:
+          CI: true
+
+      # Tests E2E Cypress avec couverture instrumentée
+      - name: Run Cypress E2E tests with coverage
+        run: npm run e2e:coverage
         env:
           CI: true
 
       # Publier le rapport de couverture Jest
-      - name: Upload coverage report
+      - name: Upload Jest coverage report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-report
+          name: coverage-jest
           path: coverage/
+          if-no-files-found: ignore
+
+      # Publier le rapport de couverture Cypress
+      - name: Upload Cypress coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-e2e
+          path: coverage-e2e/
           if-no-files-found: ignore
 
       # Conserver les artefacts Cypress si échec

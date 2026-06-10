@@ -2,17 +2,17 @@
   "name": "etudiant-frontend",
   "version": "0.0.0",
   "scripts": {
-    "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
-    "watch": "ng build --watch --configuration development",
     "test": "jest",
     "test:watch": "jest --watch",
-    "e2e": "cypress run",
+    "test:ci": "npm run test && npm run e2e:coverage",
     "e2e:open": "cypress open",
-    "start:ci": "ng serve --host 127.0.0.1 --port 4200 --watch=false",
-    "e2e:ci": "start-server-and-test start:ci http://127.0.0.1:4200 e2e",
-    "test:ci": "npm run test && npm run e2e:ci"
+    "e2e:ci": "start-server-and-test \"ng serve --host 127.0.0.1 --port 4200 --watch=false\" http://127.0.0.1:4200 \"cypress run\"",
+    "e2e:coverage": "rimraf .nyc_output coverage-e2e && start-server-and-test \"ng serve --configuration=coverage --host 127.0.0.1 --port 4200\" http://127.0.0.1:4200 \"cypress run\" && nyc report --reporter=lcov --reporter=text-summary --reporter=html --report-dir=coverage-e2e",
+    "e2e:coverage:open": "rimraf .nyc_output coverage-e2e && start-server-and-test \"ng serve --configuration=coverage --host 127.0.0.1 --port 4200\" http://127.0.0.1:4200 \"cypress open\"",
+    "e2e:coverage:report": "nyc report --reporter=lcov --reporter=text-summary --reporter=html --report-dir=coverage-e2e",
+    "postinstall": "patch-package"
   },
   "private": true,
   "dependencies": {
@@ -33,11 +33,16 @@
     "@angular-devkit/build-angular": "^19.0.7",
     "@angular/cli": "^19.2.16",
     "@angular/compiler-cli": "^19.2.0",
+    "@cypress/code-coverage": "^4.0.3",
+    "@istanbuljs/nyc-config-typescript": "^1.0.2",
     "@types/jest": "^29.5.4",
     "cypress": "^15.15.0",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0",
     "jest-preset-angular": "^14.5.1",
+    "nyc": "^18.0.0",
+    "patch-package": "^8.0.1",
+    "rimraf": "^6.1.3",
     "start-server-and-test": "^3.0.5",
     "typescript": "~5.7.2"
   }

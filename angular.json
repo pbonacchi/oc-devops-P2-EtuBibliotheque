@@ -52,6 +52,20 @@
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true
+            },
+            "coverage": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": {
+                "scripts": true,
+                "styles": true,
+                "vendor": true
+              },
+              "codeCoverage": true,
+              "codeCoverageExclude": [
+                "src/main.ts",
+                "src/environments/**"
+              ]
             }
           },
           "defaultConfiguration": "production"
@@ -64,6 +78,10 @@
             },
             "development": {
               "buildTarget": "etudiant-frontend:build:development",
+              "proxyConfig": "proxy.conf.json"
+            },
+            "coverage": {
+              "buildTarget": "etudiant-frontend:build:coverage",
               "proxyConfig": "proxy.conf.json"
             }
           },
