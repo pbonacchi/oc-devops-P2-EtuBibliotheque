@@ -2,7 +2,7 @@ name: CI Frontend
 
 on:
   push:
-    branches: [main, master, e2e-coverage]
+    branches: [main, master]
   pull_request:
     branches: [main, master]
 
