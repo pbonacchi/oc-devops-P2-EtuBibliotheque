@@ -161,7 +161,7 @@ Couverture indirecte (sans test dédié) : `SpringSecurityConfig`, `RequestLoggi
 
 ## Intégration continue
 
-Un workflow GitHub Actions (`.github/workflows/ci.yml`) exécute `./mvnw verify` à chaque push sur `main` et sur chaque pull request :
+Le workflow GitHub Actions [`.github/workflows/ci-backend.yml`](../.github/workflows/ci-backend.yml) exécute `./mvnw verify` à chaque modification sous `backend/` (push sur `main` et pull request) :
 
 - exécution des 58 tests (Docker requis pour Testcontainers) ;
 - vérification du seuil JaCoCo **≥ 80 %** ;

@@ -8,7 +8,6 @@ Application Angular du projet **EtuBibliothèque** : inscription, authentificati
 | UI | Angular Material |
 | Tests unitaires | Jest 29 + `jest-preset-angular` |
 | Tests E2E | Cypress 15 |
-| CI | GitHub Actions (`.github/workflows/ci.yml`) |
 
 ## Prérequis
 
@@ -98,9 +97,7 @@ Scénarios dans `cypress/e2e/` : accueil, login, register, garde d'authentificat
 npm run test:ci
 ```
 
-## Intégration continue
-
-Le workflow **CI Frontend** (push/pull request sur `main` ou `master`) exécute Jest puis Cypress avec couverture sous Node.js 22. Les rapports HTML sont publiés en artefacts (`coverage-jest`, `coverage-e2e`). En cas d'échec Cypress, les captures d'écran et vidéos sont également conservées.
+La CI du monorepo est décrite dans le [README racine](../README.md#intégration-continue).
 
 ## Structure du projet
 

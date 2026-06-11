@@ -165,9 +165,7 @@ Pour exécuter les tests et générer le rapport **sans** vérifier le seuil : `
 
 Pour le détail des scénarios de test, des exclusions JaCoCo et des critères d'acceptation, voir [README_QA.md](README_QA.md).
 
-## Intégration continue
-
-Un workflow GitHub Actions (`.github/workflows/ci.yml`) exécute `./mvnw verify` à chaque push sur `main` et sur chaque pull request. Le rapport JaCoCo est publié en résumé du job et en artefact téléchargeable.
+La CI du monorepo est décrite dans le [README racine](../README.md#intégration-continue).
 
 ## Stack technique
 
