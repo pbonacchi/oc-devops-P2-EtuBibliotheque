@@ -255,8 +255,7 @@ Ces exclusions visent à mesurer la couverture du **code applicatif exécutable*
 | `mapper`                           | 93 % (DTO null non testés) | 50 %     |
 | `configuration.logging`            | 100 %                      | n/a      |
 
-
-JaCoCo — synthèse de couverture backend
+![Jacoco — synthèse de couverture backend](pictures/coverage-jacoco-20260616.png)
 
 ## Critères d'acceptation
 
