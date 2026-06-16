@@ -11,7 +11,8 @@ on:
     paths:
       - 'frontend/**'
       - '.github/workflows/ci-frontend.yml'
-
+  workflow_dispatch:
+  
 defaults:
   run:
     working-directory: frontend
