@@ -167,6 +167,26 @@ Pour le détail des scénarios de test, des exclusions JaCoCo et des critères d
 
 La CI du monorepo est décrite dans le [README racine](../README.md#intégration-continue).
 
+## Structure du projet
+
+```
+src/main/java/com/openclassrooms/etudiant/
+├── configuration/
+│   ├── logging/         # RequestLoggingFilterConfig
+│   └── security/        # SpringSecurityConfig, JwtAuthenticationFilter, CustomUserDetailService
+├── controller/          # UserController (endpoints REST /api/*)
+├── dto/                 # LoginRequestDTO, RegisterDTO, StudentDTO, AuthResponseDTO, UpdateStudentDTO
+├── entities/            # User (entité JPA)
+├── handler/             # RestExceptionHandler, ErrorDetails
+├── mapper/              # UserDtoMapper (MapStruct)
+├── repository/          # UserRepository
+└── service/             # UserService, JwtService
+src/test/java/com/openclassrooms/
+├── etudiant/            # Tests unitaires et d'intégration (controller, service, security, handler)
+└── testutils/           # UserTestBuilder
+compose.yaml             # Base MySQL (Docker Compose, démarrage automatique en dev)
+```
+
 ## Stack technique
 
 - Spring Boot 3.5 (Web, Security, Data JPA, Validation, Actuator)
