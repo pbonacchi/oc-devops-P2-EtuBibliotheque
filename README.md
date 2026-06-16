@@ -33,13 +33,13 @@ Ouvrir [http://localhost:4200](http://localhost:4200). Le proxy Angular redirige
 
 ## Tests
 
-| Partie | Commande | Couverture minimale |
-| --- | --- | --- |
-| Backend | `cd backend && ./mvnw verify` | ≥ 80 % (JaCoCo) |
-| Frontend unitaires | `cd frontend && npm test` | ≥ 80 % (Jest) |
-| Frontend E2E | `cd frontend && npm run e2e:coverage` | ≥ 80 % (Cypress) |
+| Partie | Commande | Couverture minimale | Dernier résultat (16/06/2026) |
+| --- | --- | --- | --- |
+| Backend | `cd backend && ./mvnw verify` | ≥ 80 % (JaCoCo, instructions) | **99,2 %** — [CI](https://github.com/pbonacchi/oc-devops-P2-EtuBibliotheque/actions/runs/27610338174) |
+| Frontend unitaires | `cd frontend && npm test` | ≥ 80 % (Jest, lignes) | **97,0 %** — [CI](https://github.com/pbonacchi/oc-devops-P2-EtuBibliotheque/actions/runs/27610337765) |
+| Frontend E2E | `cd frontend && npm run e2e:coverage` | ≥ 80 % (Cypress, lignes) | **94,1 %** — [CI](https://github.com/pbonacchi/oc-devops-P2-EtuBibliotheque/actions/runs/27610337765) |
 
-Détails des scénarios : [`backend/README_QA.md`](backend/README_QA.md) et [`frontend/README-QA.md`](frontend/README-QA.md).
+Détails, captures et périmètre : [`backend/README_QA.md`](backend/README_QA.md) et [`frontend/README-QA.md`](frontend/README-QA.md).
 
 ## Intégration continue
 

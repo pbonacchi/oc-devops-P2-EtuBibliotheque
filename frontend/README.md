@@ -75,7 +75,7 @@ npm test
 npm run test:watch
 ```
 
-**État actuel :** 11 suites, 76 tests — couverture ~97 % (lignes), objectif projet ≥ 80 % atteint.
+**État actuel :** 11 suites, 76 tests — couverture Jest **97,0 %** (lignes), Cypress E2E **94,1 %** (lignes). Objectif projet ≥ 80 % atteint. Détails et captures : [README-QA.md](README-QA.md#11-rapport-de-couverture).
 
 Fichiers de test : `src/**/*.spec.ts` (composants, services, guard, interceptor).
 

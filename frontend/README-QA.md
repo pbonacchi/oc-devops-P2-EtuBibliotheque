@@ -43,7 +43,8 @@ Ce document décrit la stratégie de tests frontend pour l'application Angular *
 | Sécurité | `authGuard`, `authInterceptor` | 3 | ✅ Implémenté (smoke + interceptor) |
 | E2E Cypress | 7 fichiers dans `cypress/e2e/` | 37 | ✅ Implémenté |
 | **Total unitaires** | 11 suites `*.spec.ts` | **76** | ✅ Tous passants |
-| **Couverture Jest** | lignes / statements | **~97 % / ~96 %** | ✅ Objectif ≥ 80 % atteint |
+| **Couverture Jest** | lignes / statements | **97,0 % / 97,3 %** | ✅ Objectif ≥ 80 % atteint |
+| **Couverture Cypress E2E** | lignes / branches | **94,1 % / 82,6 %** | ✅ Objectif ≥ 80 % atteint |
 
 Commandes de vérification :
 
@@ -217,18 +218,69 @@ Les identifiants `E2E-*` sont portés par les titres `it('… (E2E-…)', …)` 
 | E2E-STL-01 → 11 | `students-list.cy.ts` | Liste, sélection, CRUD, annulations, erreurs API |
 | E2E-FLOW-01 → 02 | `user-journey.cy.ts` | Parcours inscription → login → ma-bibli ; parcours admin CRUD |
 
-## 10) Critères d'acceptation
+## 10) Intégration continue
+
+Le workflow GitHub Actions [`.github/workflows/ci-frontend.yml`](../.github/workflows/ci-frontend.yml) s'exécute à chaque modification sous `frontend/` (push sur `main` et pull request) :
+
+- `npm test` — 76 tests unitaires Jest + seuil de couverture **≥ 80 %** (lignes et statements) ;
+- `npm run e2e:coverage` — 37 scénarios Cypress E2E + rapport de couverture instrumentée ;
+- dépôt des rapports HTML en artefacts **`coverage-jest`** et **`coverage-e2e`**.
+
+Les rapports de couverture ne sont **pas versionnés** dans Git (`coverage/` et `coverage-e2e/` ignorés).
+
+**Dernier run CI réussi (16/06/2026) :** [CI Frontend #27610337765](https://github.com/pbonacchi/oc-devops-P2-EtuBibliotheque/actions/runs/27610337765) — 76 tests unitaires + 37 scénarios E2E, 0 échec.
+
+## 11) Rapport de couverture
+
+### Génération
+
+```bash
+npm test                  # unitaires Jest → rapport HTML dans coverage/
+npm run e2e:coverage      # E2E Cypress → rapport HTML dans coverage-e2e/
+npm run test:ci           # pipeline complet (identique à la CI)
+```
+
+Seuils configurés dans `jest.config.js` : **≥ 80 %** sur les lignes et les statements (Jest uniquement).
+
+### Résultats (dernier rapport — 16/06/2026)
+
+> Chiffres issus des artefacts CI **`coverage-jest`** et **`coverage-e2e`** ([run #27610337765](https://github.com/pbonacchi/oc-devops-P2-EtuBibliotheque/actions/runs/27610337765)).
+
+#### Tests unitaires (Jest)
+
+| Métrique | Valeur | Seuil |
+|---|---|---|
+| Lignes | **97,0 %** (353/364) | ≥ 80 % |
+| Statements | **97,3 %** (501/515) | ≥ 80 % |
+| Branches | **86,3 %** (182/211) | — |
+| Functions | **90,8 %** (89/98) | — |
+
+![Jest — synthèse de couverture unitaire](pictures/coverage-jest-20260616.png)
+
+#### Tests E2E (Cypress + Istanbul/nyc)
+
+| Métrique | Valeur | Seuil |
+|---|---|---|
+| Lignes | **94,1 %** (175/186) | ≥ 80 % |
+| Statements | **93,3 %** (195/209) | — |
+| Branches | **82,6 %** (133/161) | — |
+| Functions | **88,9 %** (72/81) | — |
+
+![Cypress E2E — synthèse de couverture](pictures/coverage-e2e-cypress-20260616.png)
+
+## 12) Critères d'acceptation
 
 - Tous les tests unitaires et E2E sont exécutés en CI (`npm run test:ci`) et en local.
 - 0 échec sur les tests critiques (`Login`, `Register`, `UserService`, `AuthService`, parcours E2E FLOW).
-- Couverture globale (lines/statements) ≥ **80 %** — **atteint (~97 % lignes)**.
+- Couverture Jest (lignes/statements) ≥ **80 %** — **atteint (97,0 % / 97,3 %)**.
+- Couverture Cypress E2E (lignes) ≥ **80 %** — **atteint (94,1 %)**.
 - Aucune régression critique sur les parcours auth et CRUD étudiants.
 - Tests stables (pas de flaky tests sur 3 exécutions consécutives).
 - Couverture fonctionnelle minimale :
   - chaque endpoint frontend consommé (`register`, `login`, `getAll`, `get`, `create`, `update`, `delete`) a au moins 1 cas succès + 1 cas erreur,
   - les erreurs backend métiers connues (`400`, `401`) sont couvertes côté services et répercutées dans les composants critiques.
 
-## 11) Critères d'entrée / sortie
+## 13) Critères d'entrée / sortie
 
 ### Entrée
 
@@ -242,9 +294,9 @@ Les identifiants `E2E-*` sont portés par les titres `it('… (E2E-…)', …)` 
 - Tous les cas du scope exécutés (unitaires + E2E).
 - Tous les tests critiques passent.
 - Défauts bloquants/majeurs corrigés ou documentés avec décision.
-- Rapport de couverture démontré ≥ 80 %.
+- Rapport de couverture Jest et Cypress démontré ≥ 80 % (voir [section 11](#11-rapport-de-couverture)).
 
-## 12) Outils utilisés
+## 14) Outils utilisés
 
 - **Jest** (runner + assertions + mocks),
 - `jest-preset-angular`,
