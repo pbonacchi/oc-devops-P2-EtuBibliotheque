@@ -322,10 +322,10 @@ public class UserServiceTest {
         when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
 
         // WHEN
-        Optional<User> retrievedUser = userService.getStudentById(user.getId());
+        User retrievedUser = userService.getStudentById(user.getId());
 
         // THEN
-        assertThat(retrievedUser).contains(user);
+        assertThat(retrievedUser).isEqualTo(user);
         verify(userRepository).findById(user.getId());
     }
 

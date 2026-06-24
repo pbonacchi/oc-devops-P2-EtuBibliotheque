@@ -2,7 +2,7 @@ package com.openclassrooms.etudiant.service;
 
 import com.openclassrooms.etudiant.entities.User;
 import com.openclassrooms.etudiant.repository.UserRepository;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,7 +19,6 @@ import com.openclassrooms.etudiant.mapper.UserDtoMapper;
 
 @Slf4j
 @Service
-@Transactional
 @RequiredArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
@@ -29,6 +28,7 @@ public class UserService {
     @Value("${DEFAULT_PASSWORD}")
     private String defaultPassword;
 
+    @Transactional(readOnly = true)
     public String login(String login, String password) {
         Assert.notNull(login, "Login must not be null");
         Assert.notNull(password, "Password must not be null");
@@ -43,6 +43,7 @@ public class UserService {
     }
 
     //= CREATE - auto enregistrement d'un étudiant
+    @Transactional
     public void register(User user) {
         Assert.notNull(user, "User must not be null");
         log.info("Registering new user");
@@ -56,6 +57,7 @@ public class UserService {
     }
 
     //= CREATE - enregistrement d'un étudiant par un admin
+    @Transactional
     public User createStudent(User user) {
         Assert.notNull(user, "User must not be null");
         log.info("Creating new student");
@@ -69,22 +71,22 @@ public class UserService {
     }
 
     //= READ - récupérer tous les étudiants
+    @Transactional(readOnly = true)
     public List<User> getAllStudents() {
         log.info("Fetching all students");
         return userRepository.findAll();
     }
 
     //= READ - récupérer un étudiant par id
-    public Optional<User> getStudentById(Long id) {
+    @Transactional(readOnly = true)
+    public User getStudentById(Long id) {
         log.info("Fetching student with id {}", id);
-        Optional<User> optionalUser = userRepository.findById(id);
-        if (!optionalUser.isPresent()) {
-            throw new IllegalArgumentException("User with id " + id + " does not exist");
-        }
-        return optionalUser;
+        return userRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("User with id " + id + " does not exist"));
     }
 
     //= UPDATE
+    @Transactional
     public void updateStudentById(Long id, UpdateStudentDTO updateStudentDTO, UserDtoMapper mapper) {
         Assert.notNull(updateStudentDTO, "Update data must not be null");
         log.info("Updating student with id {}", id);
@@ -96,6 +98,7 @@ public class UserService {
     }
 
     //= DELETE
+    @Transactional
     public void deleteStudentById(Long id) {
         log.info("Deleting student with id {}", id);
         if (!userRepository.existsById(id)) {

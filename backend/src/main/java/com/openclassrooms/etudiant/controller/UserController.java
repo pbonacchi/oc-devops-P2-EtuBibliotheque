@@ -4,6 +4,7 @@ import com.openclassrooms.etudiant.dto.AuthResponseDTO;
 import com.openclassrooms.etudiant.dto.LoginRequestDTO;
 import com.openclassrooms.etudiant.dto.RegisterDTO;
 import com.openclassrooms.etudiant.dto.UpdateStudentDTO;
+import com.openclassrooms.etudiant.entities.User;
 import com.openclassrooms.etudiant.dto.StudentDTO;
 import com.openclassrooms.etudiant.mapper.UserDtoMapper;
 import com.openclassrooms.etudiant.service.UserService;
@@ -65,10 +66,8 @@ public class UserController {
     //= READ - get student by id
     @GetMapping("/api/students/{id}")
     public ResponseEntity<StudentDTO> getStudentById(@PathVariable Long id) {
-        return userService.getStudentById(id)
-                .map(userDtoMapper::toStudentDTO)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        User user = userService.getStudentById(id);
+        return ResponseEntity.ok(userDtoMapper.toStudentDTO(user));
     }
     //= UPDATE - update student by id
     @PutMapping("/api/students/{id}")
